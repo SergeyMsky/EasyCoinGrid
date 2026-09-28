@@ -1,0 +1,77 @@
+import { BarChart3, ShieldCheck, WalletCards } from 'lucide-react'
+import { useState } from 'react'
+import { LoginForm } from '@/features/auth/components/LoginForm'
+import { RegisterForm } from '@/features/auth/components/RegisterForm'
+import { ForgotPasswordForm } from '@/features/auth/components/ForgotPasswordForm'
+import { useSearchParams } from 'react-router-dom'
+
+export function AuthPage() {
+  const [searchParams] = useSearchParams()
+  const initialMode = searchParams.get('mode') === 'register' ? 'register' : 'login'
+  const [mode, setMode] = useState<'login' | 'register' | 'forgot'>(initialMode)
+  const isLogin = mode === 'login'
+
+  return (
+    <main className="min-h-[calc(100vh-67px)] px-4 py-30 pt-20 sm:pt-30">
+      <div className="mx-auto grid w-full max-w-5xl overflow-hidden ui-surface md:grid-cols-2">
+        <section className="hidden flex-col justify-between bg-emerald-400/10 p-8 md:flex">
+          <div className="mb-12">
+            <p className="mb-8 text-sm font-bold uppercase tracking-[0.2em] text-emerald-400">
+              <span className="text-white">Easy</span>CoinGrid
+            </p>
+            <h1 className="mb-5 text-4xl font-semibold leading-tight">
+              Your portfolio,
+              <span className="block text-gray-500">under control.</span>
+            </h1>
+            <p className="max-w-sm leading-7 text-gray-300">Track your crypto assets and understand your portfolio from one focused dashboard.</p>
+          </div>
+          <div className="space-y-5">
+            {[
+              [WalletCards, 'All your assets in one place'],
+              [BarChart3, 'Clear portfolio insights'],
+              [ShieldCheck, 'Read-only exchange access'],
+            ].map(([Icon, text]) => (
+              <div key={text as string} className="flex items-center gap-3 text-sm text-gray-400">
+                <Icon className="h-5 w-5 text-emerald-400" />
+                <span>{text as string}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+        <section className="px-4 py-8 sm:p-8">
+          <div className="mb-10 sm:mb-15">
+            <p className="mb-2 text-sm text-emerald-400">Welcome to easycoingrid</p>
+            <h2 className="mb-2 text-3xl font-semibold">
+              {mode === 'login' && 'Welcome back'}
+              {mode === 'register' && 'Create your account'}
+              {mode === 'forgot' && 'Forgot password'}
+            </h2>
+            <p className="text-sm text-gray-500">
+              {mode === 'login' && 'Sign in to view your portfolio.'}
+              {mode === 'register' && 'Start tracking your portfolio in a few minutes.'}
+              {mode === 'forgot' && 'Enter your email to reset your password.'}
+            </p>
+          </div>
+          {mode === 'login' && <LoginForm onForgotPassword={() => setMode('forgot')} />}
+          {mode === 'register' && <RegisterForm />}
+          {mode === 'forgot' && <ForgotPasswordForm onBack={() => setMode('login')} />}
+          {mode !== 'forgot' && (
+            <>
+              <div className="my-6 flex items-center gap-3 text-xs text-gray-600">
+                <span className="h-px flex-1 bg-white/10" />
+                <span>OR</span>
+                <span className="h-px flex-1 bg-white/10" />
+              </div>
+              <div className="text-gray-500 text-center">
+                {isLogin ? `Don't have an account?` : 'Already have an account?'}{' '}
+                <button type="button" className="cursor-pointer text-white transition hover:text-emerald-400" onClick={() => setMode(isLogin ? 'register' : 'login')}>
+                  {isLogin ? 'Sign up' : 'Sign in'}
+                </button>
+              </div>
+            </>
+          )}
+        </section>
+      </div>
+    </main>
+  )
+}
