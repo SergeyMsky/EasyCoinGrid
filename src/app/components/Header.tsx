@@ -1,4 +1,4 @@
-import { Check, ChevronRight, Cog, LogOut, Settings, Sparkles } from 'lucide-react'
+import { Check, ChevronRight, Cog, LogOut, Menu, Settings, Sparkles, X } from 'lucide-react'
 import { SORTED_CURRENCY_OPTIONS, type Currency } from '@/features/portfolio/portfolio.types'
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
@@ -11,9 +11,11 @@ type HeaderProps = {
   currency: Currency
   setCurrency: (value: Currency) => void
   avatarUrl: string | null
+  navigationOpen: boolean
+  onToggleNavigation: () => void
 }
 
-export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl }: HeaderProps) {
+export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl, navigationOpen, onToggleNavigation }: HeaderProps) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [currencyOpen, setCurrencyOpen] = useState(false)
@@ -23,8 +25,6 @@ export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl }
   const settingsButtonRef = useRef<HTMLDivElement>(null)
   const settingsMenuRef = useRef<HTMLDivElement>(null)
   const currencyMenuRef = useRef<HTMLDivElement>(null)
-
-  const navClass = ({ isActive }: { isActive: boolean }) => `transition font-medium tracking-wider ${isActive ? 'text-white' : 'text-gray-500 hover:text-white'}`
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -48,25 +48,33 @@ export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl }
   }, [])
 
   return (
-    <header className="relative z-10 bg-black/30 border-b border-white/10 before:absolute before:top-0 before:left-1/2 before:-z-10 before:h-full before:w-screen before:-translate-x-1/2 before:backdrop-blur-md">
-      <div className="mx-auto max-w-7xl flex items-center px-4 py-3 gap-10 justify-between">
-        <div className="flex items-center gap-4 sm:gap-10">
-          <Link to="/home" className="flex items-center gap-1 sm:gap-2 group">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b0e0c]/95 backdrop-blur-md">
+      <div className="flex h-[61px] items-center justify-between gap-4 px-4 sm:px-6">
+        <div className="flex min-w-0 items-center gap-3 sm:gap-6">
+          {userEmail && (
+            <button
+              type="button"
+              aria-label={navigationOpen ? 'Close navigation menu' : 'Open navigation menu'}
+              aria-expanded={navigationOpen}
+              onClick={onToggleNavigation}
+              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white lg:hidden"
+            >
+              {navigationOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          )}
+          <Link to={userEmail ? '/dashboard' : '/home'} className="group flex items-center gap-1 sm:gap-2">
             <img className="h-6 w-6 sm:h-8 sm:w-8" src={logo} alt="EasyCoinGrid Logo" />
             <span className="text-md sm:text-lg font-bold tracking-wider uppercase text-emerald-400 translate-y-px">
               <span className="text-white">Easy</span>CoinGrid
             </span>
           </Link>
-          <nav className="hidden sm:flex items-center gap-5 ">
-            <NavLink to="/home" className={navClass}>
+          {!userEmail && (
+            <nav className="hidden items-center gap-5 sm:flex">
+              <NavLink to="/home" className={({ isActive }) => `font-medium tracking-wider transition ${isActive ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
               Home
-            </NavLink>
-            {userEmail && (
-              <NavLink to="/dashboard" className={navClass}>
-                Dashboard
               </NavLink>
-            )}
-          </nav>
+            </nav>
+          )}
         </div>
         <div className="flex items-center gap-4">
           <div ref={settingsButtonRef} className="relative z-10">
@@ -162,26 +170,6 @@ export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl }
                     </p>
                   </div>
                   <div className="p-1.5">
-                    <div className="space-y-1 mb-1 sm:hidden">
-                      <NavLink
-                        to="/home"
-                        onClick={() => setProfileOpen(false)}
-                        className={({ isActive }) =>
-                          `flex items-center rounded-md px-2.5 py-2 text-sm font-medium transition ${isActive ? 'bg-emerald-400 text-black' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`
-                        }
-                      >
-                        Home
-                      </NavLink>
-                      <NavLink
-                        to="/dashboard"
-                        onClick={() => setProfileOpen(false)}
-                        className={({ isActive }) =>
-                          `flex items-center rounded-md px-2.5 py-2 text-sm font-medium transition ${isActive ? 'bg-emerald-400 text-black' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`
-                        }
-                      >
-                        Dashboard
-                      </NavLink>
-                    </div>
                     <Link
                       to="/settings"
                       role="menuitem"

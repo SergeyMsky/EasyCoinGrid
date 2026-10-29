@@ -1,8 +1,10 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import { CURRENCY_OPTIONS, type Currency } from '@/features/portfolio/portfolio.types'
 import { Header } from './components/Header'
+import { Sidebar } from './components/Sidebar'
 import type { Session } from '@supabase/supabase-js'
 import { Dashboard } from '@/pages/Dashboard'
+import { RotationsPage } from '@/pages/RotationsPage'
 import { AuthPage } from '@/features/auth/pages/AuthPage'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { SettingsPage } from '@/features/settings/pages/SettingsPage'
@@ -30,9 +32,27 @@ function PublicRoute({ session, children }: { session: Session | null; children:
   return <>{children}</>
 }
 
+function AppLayout({
+  children,
+  navigationOpen,
+  onNavigate,
+}: {
+  children: ReactNode
+  navigationOpen: boolean
+  onNavigate: () => void
+}) {
+  return (
+    <div className="flex min-h-[calc(100vh-61px)]">
+      <Sidebar mobileOpen={navigationOpen} onNavigate={onNavigate} />
+      <main className="min-w-0 flex-1">{children}</main>
+    </div>
+  )
+}
+
 function App() {
   const [currency, setCurrency] = useState<Currency>(getStoredCurrency())
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [navigationOpen, setNavigationOpen] = useState(false)
   const { session, loading: authLoading } = useAuth()
 
   async function handleLogout() {
@@ -78,7 +98,15 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Header userEmail={session?.user.email} onLogout={handleLogout} currency={currency} setCurrency={setCurrency} avatarUrl={avatarUrl} />
+      <Header
+        userEmail={session?.user.email}
+        onLogout={handleLogout}
+        currency={currency}
+        setCurrency={setCurrency}
+        avatarUrl={avatarUrl}
+        navigationOpen={navigationOpen}
+        onToggleNavigation={() => setNavigationOpen((open) => !open)}
+      />
 
       <Routes>
         <Route path="/home" element={<Home />} />
@@ -98,7 +126,19 @@ function App() {
           path="/dashboard"
           element={
             <ProtectedRoute session={session}>
-              <Dashboard currency={currency} />
+              <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
+                <Dashboard currency={currency} />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rotations"
+          element={
+            <ProtectedRoute session={session}>
+              <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
+                <RotationsPage />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
@@ -106,7 +146,9 @@ function App() {
           path="/settings"
           element={
             <ProtectedRoute session={session}>
-              <SettingsPage userEmail={session?.user.email ?? ''} session={session} avatarUrl={avatarUrl} setAvatarUrl={setAvatarUrl} />
+              <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
+                <SettingsPage userEmail={session?.user.email ?? ''} session={session} avatarUrl={avatarUrl} setAvatarUrl={setAvatarUrl} />
+              </AppLayout>
             </ProtectedRoute>
           }
         />
