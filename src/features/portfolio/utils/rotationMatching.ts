@@ -73,7 +73,14 @@ export function matchBinanceTradesFifo(
     const priceUsd = trade.priceUsd ?? priceToUsd(price, trade)
     const feeUsd = trade.commissionUsd ?? feeToUsd(commission, trade.commissionAsset, trade)
 
-    if (![quantity, price, commission, priceUsd, feeUsd].every(Number.isFinite) || quantity <= 0 || price <= 0 || commission < 0 || priceUsd <= 0 || feeUsd < 0) {
+    if (
+      ![quantity, price, commission, priceUsd, feeUsd].every(Number.isFinite) ||
+      quantity <= 0 ||
+      price <= 0 ||
+      commission < 0 ||
+      priceUsd <= 0 ||
+      feeUsd < 0
+    ) {
       throw new RangeError(`Trade ${trade.id} contains invalid price, quantity, or fee data.`)
     }
 

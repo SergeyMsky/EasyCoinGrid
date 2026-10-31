@@ -53,13 +53,21 @@ export function CloseRotationModal({ rotation, onCancel, onClose }: CloseRotatio
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onMouseDown={(event) => {
-      if (event.target === event.currentTarget && !saving) onCancel()
-    }}>
-      <section role="dialog" aria-modal="true" aria-labelledby="close-rotation-title" className="w-full max-w-lg rounded-lg border border-white/10 bg-slate-950 p-6 shadow-2xl">
-        <h2 id="close-rotation-title" className="text-xl font-semibold">Close {rotation.symbol} rotation</h2>
-        <p className="mt-1 text-sm text-gray-400">Available quantity: {remainingQty}</p>
-        <p className="mt-1 text-xs text-gray-500">This records a completed sell; it does not place an order on Binance.</p>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget && !saving) onCancel()
+      }}>
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="close-rotation-title"
+        className="w-full max-w-lg rounded-xl border border-outline bg-surface-raised p-6">
+        <h2 id="close-rotation-title" className="text-xl font-semibold">
+          Close {rotation.symbol} rotation
+        </h2>
+        <p className="mt-1 text-sm text-muted">Available quantity: {remainingQty}</p>
+        <p className="mt-1 text-xs text-muted">This records a completed sell; it does not place an order on Binance.</p>
         <form className="mt-5 space-y-4" onSubmit={handleSubmit}>
           <label className="block text-sm">
             Execution price (USD)
@@ -71,18 +79,16 @@ export function CloseRotationModal({ rotation, onCancel, onClose }: CloseRotatio
               type="number"
               value={sellPrice}
               onChange={(event) => setSellPrice(event.target.value)}
-              className="mt-1 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white"
+              className="input mt-1 px-3 py-2"
             />
           </label>
           <label className="block text-sm">
             Quantity to close
-            <select
-              value={quantityPercent}
-              onChange={(event) => setQuantityPercent(Number(event.target.value))}
-              className="mt-1 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white"
-            >
+            <select value={quantityPercent} onChange={(event) => setQuantityPercent(Number(event.target.value))} className="input mt-1 px-3 py-2">
               {quantityPercentages.map((percentage) => (
-                <option key={percentage} value={percentage}>{percentage}% ({remainingQty * percentage / 100})</option>
+                <option key={percentage} value={percentage}>
+                  {percentage}% ({(remainingQty * percentage) / 100})
+                </option>
               ))}
             </select>
           </label>
@@ -94,7 +100,7 @@ export function CloseRotationModal({ rotation, onCancel, onClose }: CloseRotatio
               type="number"
               value={feeAmountUsd}
               onChange={(event) => setFeeAmountUsd(event.target.value)}
-              className="mt-1 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white"
+              className="input mt-1 px-3 py-2"
             />
           </label>
           <label className="block text-sm">
@@ -104,23 +110,27 @@ export function CloseRotationModal({ rotation, onCancel, onClose }: CloseRotatio
               type="datetime-local"
               value={sellTime}
               onChange={(event) => setSellTime(event.target.value)}
-              className="mt-1 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white"
+              className="input mt-1 px-3 py-2"
             />
           </label>
           <label className="block text-sm">
             Sell trade ID (optional)
-            <input
-              value={sellTradeId}
-              onChange={(event) => setSellTradeId(event.target.value)}
-              className="mt-1 w-full rounded-md border border-white/15 bg-black/30 px-3 py-2 text-white"
-            />
+            <input value={sellTradeId} onChange={(event) => setSellTradeId(event.target.value)} className="input mt-1 px-3 py-2" />
           </label>
-          {error && <p role="alert" className="text-sm text-red-400">{error}</p>}
+          {error && (
+            <p role="alert" className="text-sm text-error">
+              {error}
+            </p>
+          )}
           <div className="flex justify-end gap-3 pt-2">
-            <Button type="button" variant="dashboard" onClick={onCancel} disabled={saving}>Cancel</Button>
-            <Button type="submit" disabled={saving || remainingQty <= 0}>{saving ? 'Closing…' : `Close ${soldQty} ${rotation.symbol}`}</Button>
+            <Button type="button" variant="dashboard" onClick={onCancel} disabled={saving}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={saving || remainingQty <= 0}>
+              {saving ? 'Closing…' : `Close ${soldQty} ${rotation.symbol}`}
+            </Button>
           </div>
-          <p className="text-xs text-gray-500">Buy price: {formatCurrency(rotation.buy_price, 'USD')}</p>
+          <p className="text-xs text-muted">Buy price: {formatCurrency(rotation.buy_price, 'USD')}</p>
         </form>
       </section>
     </div>

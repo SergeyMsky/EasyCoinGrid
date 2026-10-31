@@ -110,13 +110,13 @@ describe('PortfolioTable', () => {
   it('shows loading skeleton while portfolio is loading', () => {
     render(<PortfolioTable {...defaultProps} loading />)
 
-    expect(screen.getByRole('list', { name: 'Loading portfolio' })).toBeInTheDocument()
+    expect(screen.getByRole('table', { name: 'Loading portfolio' })).toBeInTheDocument()
     expect(screen.queryByText('Bitcoin')).not.toBeInTheDocument()
   })
 
   it('shows empty state when there are no assets', () => {
     render(<PortfolioTable {...defaultProps} assets={[]} />)
     expect(screen.getByText('Nothing found')).toBeInTheDocument()
-    expect(screen.queryByRole('list', { name: 'Portfolio assets' })).not.toBeInTheDocument()
+    expect(screen.getByRole('table', { name: 'Portfolio assets' })).toBeInTheDocument()
   })
 })

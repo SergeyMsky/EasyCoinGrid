@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import type { SpotRotation } from '@/features/portfolio/portfolio.types'
-import { calculateNetRealizedPnl, calculateRotationClose, matchBinanceTradesFifo, type BinanceSpotTrade } from '@/features/portfolio/utils/rotationMatching'
+import {
+  calculateNetRealizedPnl,
+  calculateRotationClose,
+  matchBinanceTradesFifo,
+  type BinanceSpotTrade,
+} from '@/features/portfolio/utils/rotationMatching'
 
 const rotation: SpotRotation = {
   id: 'rotation-1',
@@ -65,7 +70,9 @@ describe('calculateRotationClose', () => {
   })
 
   it('rejects a close larger than the remaining quantity', () => {
-    expect(() => calculateRotationClose(rotation, { sellPrice: 120, soldQty: 3, sellFeeAmountUsd: 0, sellTime: '2026-10-29T13:00:00.000Z' })).toThrow(RangeError)
+    expect(() => calculateRotationClose(rotation, { sellPrice: 120, soldQty: 3, sellFeeAmountUsd: 0, sellTime: '2026-10-29T13:00:00.000Z' })).toThrow(
+      RangeError,
+    )
   })
 })
 
@@ -124,10 +131,13 @@ describe('matchBinanceTradesFifo', () => {
   })
 
   it('uses the USD-normalized trade prices and fees returned by the Binance function', () => {
-    const result = matchBinanceTradesFifo([
-      trade({ id: 1, price: 2, priceUsd: 200, qty: 1, commission: 0.01, commissionUsd: 2 }),
-      trade({ id: 2, price: 2.5, priceUsd: 250, qty: 1, commission: 0.01, commissionUsd: 2, time: 2, isBuyer: false }),
-    ], options)
+    const result = matchBinanceTradesFifo(
+      [
+        trade({ id: 1, price: 2, priceUsd: 200, qty: 1, commission: 0.01, commissionUsd: 2 }),
+        trade({ id: 2, price: 2.5, priceUsd: 250, qty: 1, commission: 0.01, commissionUsd: 2, time: 2, isBuyer: false }),
+      ],
+      options,
+    )
 
     expect(result.rotations[0]).toMatchObject({
       status: 'CLOSED',
@@ -139,10 +149,13 @@ describe('matchBinanceTradesFifo', () => {
   })
 
   it('matches trades for the same asset across different quote pairs', () => {
-    const result = matchBinanceTradesFifo([
-      trade({ id: 1, symbol: 'ETHBTC', baseAsset: 'ETH', price: 2000, priceUsd: 2000, time: 1 }),
-      trade({ id: 2, symbol: 'ETHUSDC', baseAsset: 'ETH', price: 2200, priceUsd: 2200, time: 2, isBuyer: false }),
-    ], options)
+    const result = matchBinanceTradesFifo(
+      [
+        trade({ id: 1, symbol: 'ETHBTC', baseAsset: 'ETH', price: 2000, priceUsd: 2000, time: 1 }),
+        trade({ id: 2, symbol: 'ETHUSDC', baseAsset: 'ETH', price: 2200, priceUsd: 2200, time: 2, isBuyer: false }),
+      ],
+      options,
+    )
 
     expect(result.rotations).toHaveLength(1)
     expect(result.rotations[0]).toMatchObject({

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import type { CloseRotationInput, CreateSpotRotationInput, SpotRotation } from '@/features/portfolio/portfolio.types'
 import { closeSpotRotation, createSpotRotation, getSpotRotations } from '@/features/portfolio/api/spot-rotations.api'
 import { syncBinanceSpotRotations, type SpotRotationSyncStatus } from '@/features/portfolio/api/binance-spot-trades.api'
+import { getSpotRotationBaseAsset } from '@/features/portfolio/utils/spot-rotation-symbol'
 
 type UseSpotRotationsOptions = {
   assets: string[]
@@ -16,20 +17,19 @@ export function useSpotRotations({ assets, syncFromBinance }: UseSpotRotationsOp
   const [syncStatus, setSyncStatus] = useState<SpotRotationSyncStatus | null>(null)
   const assetKey = [...new Set(assets.map((asset) => asset.trim().toUpperCase()).filter(Boolean))].sort().join(',')
 
-  const runSync = useCallback(async (existingRotations: SpotRotation[]) => {
-    const autoRotations = existingRotations.filter((rotation) => rotation.match_type === 'AUTO_API')
-    const knownAssets = autoRotations.map((rotation) => {
-      const symbol = rotation.symbol.toUpperCase()
-      const quoteAsset = ['USDT', 'USDC', 'FDUSD', 'TUSD', 'USDP', 'DAI'].find((quote) => symbol.endsWith(quote) && symbol.length > quote.length)
-      return quoteAsset ? symbol.slice(0, -quoteAsset.length) : symbol
-    })
-    const knownSymbols = [...new Set(autoRotations.map((rotation) => rotation.symbol.toUpperCase()))]
-    const assetsToSync = [...new Set([...(assetKey ? assetKey.split(',') : []), ...knownAssets])]
+  const runSync = useCallback(
+    async (existingRotations: SpotRotation[]) => {
+      const autoRotations = existingRotations.filter((rotation) => rotation.match_type === 'AUTO_API')
+      const knownAssets = autoRotations.map((rotation) => getSpotRotationBaseAsset(rotation.symbol))
+      const knownSymbols = [...new Set(autoRotations.map((rotation) => rotation.symbol.toUpperCase()))]
+      const assetsToSync = [...new Set([...(assetKey ? assetKey.split(',') : []), ...knownAssets])]
 
-    const status = await syncBinanceSpotRotations(assetsToSync, knownSymbols)
-    const updatedRotations = await getSpotRotations()
-    return { status, rotations: updatedRotations }
-  }, [assetKey])
+      const status = await syncBinanceSpotRotations(assetsToSync, knownSymbols)
+      const updatedRotations = await getSpotRotations()
+      return { status, rotations: updatedRotations }
+    },
+    [assetKey],
+  )
 
   const refreshRotations = useCallback(async () => {
     setLoading(true)
@@ -90,18 +90,26 @@ export function useSpotRotations({ assets, syncFromBinance }: UseSpotRotationsOp
 
     void loadAndSync()
 
-    return () => { active = false }
+    return () => {
+      active = false
+    }
   }, [runSync, syncFromBinance])
 
-  const addRotation = useCallback(async (input: CreateSpotRotationInput) => {
-    await createSpotRotation(input)
-    await refreshRotations()
-  }, [refreshRotations])
+  const addRotation = useCallback(
+    async (input: CreateSpotRotationInput) => {
+      await createSpotRotation(input)
+      await refreshRotations()
+    },
+    [refreshRotations],
+  )
 
-  const closeRotation = useCallback(async (rotation: SpotRotation, input: CloseRotationInput) => {
-    await closeSpotRotation(rotation.id, input)
-    await refreshRotations()
-  }, [refreshRotations])
+  const closeRotation = useCallback(
+    async (rotation: SpotRotation, input: CloseRotationInput) => {
+      await closeSpotRotation(rotation.id, input)
+      await refreshRotations()
+    },
+    [refreshRotations],
+  )
 
   return { rotations, loading, syncing, error, syncStatus, syncNow, refreshRotations, addRotation, closeRotation }
 }

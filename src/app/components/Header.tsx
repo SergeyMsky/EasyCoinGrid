@@ -15,6 +15,28 @@ type HeaderProps = {
   onToggleNavigation: () => void
 }
 
+const currencyFlagCodes: Record<Currency, string> = {
+  USD: 'us',
+  EUR: 'eu',
+  GBP: 'gb',
+  JPY: 'jp',
+  CHF: 'ch',
+  CAD: 'ca',
+  AUD: 'au',
+  UAH: 'ua',
+}
+
+function CurrencyFlag({ currency }: { currency: Currency }) {
+  return (
+    <img
+      src={`https://flagcdn.com/${currencyFlagCodes[currency]}.svg`}
+      alt=""
+      aria-hidden="true"
+      className="h-3.5 w-5 shrink-0 rounded-xs object-cover"
+    />
+  )
+}
+
 export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl, navigationOpen, onToggleNavigation }: HeaderProps) {
   const [profileOpen, setProfileOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -48,8 +70,8 @@ export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl, 
   }, [])
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/10 bg-[#0b0e0c]/95 backdrop-blur-md">
-      <div className="flex h-[61px] items-center justify-between gap-4 px-4 sm:px-6">
+    <header className="sticky top-0 z-40 border-b border-outline bg-app">
+      <div className="flex h-15.25 items-center justify-between gap-4 px-4">
         <div className="flex min-w-0 items-center gap-3 sm:gap-6">
           {userEmail && (
             <button
@@ -57,27 +79,28 @@ export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl, 
               aria-label={navigationOpen ? 'Close navigation menu' : 'Open navigation menu'}
               aria-expanded={navigationOpen}
               onClick={onToggleNavigation}
-              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-300 transition hover:border-white/20 hover:bg-white/10 hover:text-white lg:hidden"
-            >
+              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-outline bg-surface-raised text-text transition hover:border-muted hover:bg-surface hover:text-text lg:hidden">
               {navigationOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           )}
           <Link to={userEmail ? '/dashboard' : '/home'} className="group flex items-center gap-1 sm:gap-2">
             <img className="h-6 w-6 sm:h-8 sm:w-8" src={logo} alt="EasyCoinGrid Logo" />
-            <span className="text-md sm:text-lg font-bold tracking-wider uppercase text-emerald-400 translate-y-px">
-              <span className="text-white">Easy</span>CoinGrid
+            <span className="text-md translate-y-px font-bold tracking-wider text-accent uppercase sm:text-lg">
+              <span className="text-text">Easy</span>CoinGrid
             </span>
           </Link>
           {!userEmail && (
             <nav className="hidden items-center gap-5 sm:flex">
-              <NavLink to="/home" className={({ isActive }) => `font-medium tracking-wider transition ${isActive ? 'text-white' : 'text-gray-500 hover:text-white'}`}>
-              Home
+              <NavLink
+                to="/home"
+                className={({ isActive }) => `font-medium tracking-wider transition ${isActive ? 'text-text' : 'text-muted hover:text-text'}`}>
+                Home
               </NavLink>
             </nav>
           )}
         </div>
-        <div className="flex items-center gap-4">
-          <div ref={settingsButtonRef} className="relative z-10">
+        <div className="flex h-full items-center gap-4">
+          <div ref={settingsButtonRef} className="relative z-10 flex h-full">
             <button
               type="button"
               aria-label="Open settings menu"
@@ -87,8 +110,7 @@ export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl, 
                 setProfileOpen(false)
                 setCurrencyOpen(false)
               }}
-              className="cursor-pointer flex p-1.5 items-center justify-center rounded-full border border-white/10 bg-white/5 text-gray-500 transition hover:border-white/20! hover:bg-black/5! hover:text-white!"
-            >
+              className="my-auto flex cursor-pointer items-center justify-center rounded-full border border-outline bg-surface-raised p-1.5 text-muted transition hover:border-muted! hover:bg-surface! hover:text-text!">
               <Cog className="h-5 w-5" />
             </button>
             {settingsOpen && (
@@ -96,23 +118,32 @@ export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl, 
                 ref={settingsMenuRef}
                 role="menu"
                 onMouseDown={(event) => event.stopPropagation()}
-                className="absolute right-0 top-[54px] z-10 w-44 overflow-hidden ui-surface shadow-md shadow-black/50"
-              >
-                <div className="p-1.5 space-y-1">
+                className="ui-surface absolute top-full right-0 z-10 w-54 overflow-hidden">
+                <div className="space-y-1 p-1.5">
                   <button
                     type="button"
                     onClick={() => setCurrencyOpen((open) => !open)}
                     aria-expanded={currencyOpen}
-                    className="group cursor-pointer flex items-center justify-between gap-2 w-full rounded-md px-2.5 py-2 pr-1 text-left text-sm font-medium transition text-gray-300 hover:bg-white/10 hover:text-white"
-                  >
+                    className="group flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2.5 py-2 pr-1 text-left text-sm font-medium text-text transition hover:bg-surface-raised hover:text-text">
                     <span>Currency</span>
                     <div className="flex items-center gap-1">
-                      <span className="px-2 py-1 border border-emerald-400/20 rounded-md bg-emerald-400/10 text-emerald-400 text-xs font-semibold">{currency}</span>
-                      <ChevronRight className={`h-4 w-4 text-gray-500 transition ${currencyOpen ? 'rotate-90 text-emerald-400' : 'group-hover:translate-x-0.5 group-hover:text-emerald-400'}`} />
+                      <span className="rounded-md border border-accent-outline bg-accent-subtle px-2 py-1 text-xs font-semibold text-accent">
+                        <span className="flex items-center gap-1.5">
+                          <CurrencyFlag currency={currency} />
+                          {currency}
+                        </span>
+                      </span>
+                      <ChevronRight
+                        className={`h-4 w-4 text-muted transition ${currencyOpen ? 'rotate-90 text-accent' : 'group-hover:translate-x-0.5 group-hover:text-accent'}`}
+                      />
                     </div>
                   </button>
                   {currencyOpen && (
-                    <div ref={currencyMenuRef} role="group" onMouseDown={(event) => event.stopPropagation()} className="mt-1 space-y-1 border-t border-white/10 pt-1">
+                    <div
+                      ref={currencyMenuRef}
+                      role="group"
+                      onMouseDown={(event) => event.stopPropagation()}
+                      className="mt-1 space-y-1 border-t border-outline pt-1">
                       {SORTED_CURRENCY_OPTIONS.map((option) => (
                         <button
                           key={option}
@@ -121,12 +152,14 @@ export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl, 
                             setCurrency(option)
                             setCurrencyOpen(false)
                           }}
-                          className={`cursor-pointer flex items-center justify-between gap-2 w-full rounded-md px-2.5 py-2 text-left text-xs font-medium transition ${
-                            currency === option ? 'bg-emerald-400 text-black' : 'text-gray-400 hover:bg-white/10 hover:text-white'
-                          }`}
-                        >
-                          <span>{option}</span>
-                          {currency === option && <Check className="h-4 w-4 shrink-0 text-black" strokeWidth={2.5} aria-hidden="true" />}
+                          className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium transition ${
+                            currency === option ? 'bg-accent text-on-accent' : 'text-muted hover:bg-surface-raised hover:text-text'
+                          }`}>
+                          <span className="flex items-center gap-2">
+                            <CurrencyFlag currency={option} />
+                            {option}
+                          </span>
+                          {currency === option && <Check className="h-4 w-4 shrink-0 text-on-accent" strokeWidth={2.5} aria-hidden="true" />}
                         </button>
                       ))}
                     </div>
@@ -136,7 +169,7 @@ export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl, 
             )}
           </div>
           {userEmail ? (
-            <div ref={profileButtonRef} className="relative z-10">
+            <div ref={profileButtonRef} className="relative z-10 flex h-full">
               <button
                 type="button"
                 aria-label="Open profile menu"
@@ -146,26 +179,21 @@ export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl, 
                   setSettingsOpen(false)
                   setCurrencyOpen(false)
                 }}
-                className="group cursor-pointer flex items-center gap-1 ui-surface p-1.5 transition hover:border-white/20! hover:bg-black/5!"
-              >
-                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-emerald-400/20 text-sm font-medium text-emerald-400 overflow-hidden">
-                  {avatarUrl ? <img src={avatarUrl} alt="Profile avatar" className="h-full w-full object-cover" /> : userEmail[0].toUpperCase()}
-                </div>
-                <ChevronRight className={`h-4 w-4 text-gray-500 transition ${profileOpen ? 'rotate-90 text-emerald-400' : 'group-hover:translate-x-0.5 group-hover:text-emerald-400'}`} />
+                className="group my-auto h-8 w-8 cursor-pointer overflow-hidden rounded-md border border-outline bg-accent-subtle text-sm font-medium text-accent transition hover:border-muted">
+                {avatarUrl ? <img src={avatarUrl} alt="Profile avatar" className="h-full w-full object-cover" /> : userEmail[0].toUpperCase()}
               </button>
               {profileOpen && (
                 <div
                   ref={profileMenuRef}
                   role="menu"
                   onMouseDown={(event) => event.stopPropagation()}
-                  className="absolute right-0 top-[58px] z-10 w-44 overflow-hidden ui-surface shadow-md shadow-black/50"
-                >
-                  <div className="border-b border-white/10 px-4 py-3">
-                    <p className="flex items-center gap-1.5 mb-1 text-[10px]! label">
-                      <Sparkles className="h-3 w-3 text-emerald-400" />
+                  className="ui-surface absolute top-full right-0 z-10 w-54 overflow-hidden">
+                  <div className="border-b border-outline px-4 py-3">
+                    <p className="label mb-1 flex items-center gap-1.5 text-[10px]!">
+                      <Sparkles className="h-3 w-3 text-accent" />
                       Signed in as
                     </p>
-                    <p className="truncate text-sm text-gray-300" title={userEmail}>
+                    <p className="truncate text-sm text-text" title={userEmail}>
                       {userEmail}
                     </p>
                   </div>
@@ -174,20 +202,18 @@ export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl, 
                       to="/settings"
                       role="menuitem"
                       onClick={() => setProfileOpen(false)}
-                      className="flex items-center gap-2 mb-1 rounded-md font-medium px-2.5 py-2 text-sm text-gray-300 transition hover:bg-white/10 hover:text-white"
-                    >
+                      className="mb-1 flex items-center gap-2 rounded-md px-2.5 py-2 text-sm font-medium text-text transition hover:bg-surface-raised hover:text-text">
                       <Settings className="h-4 w-4" />
                       Settings
                     </Link>
                     <button
                       type="button"
                       role="menuitem"
-                      className="cursor-pointer flex items-center gap-2 w-full rounded-md font-medium px-2.5 py-2 text-left text-sm text-red-400 transition hover:bg-red-500/10 hover:text-red-300"
+                      className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-loss transition hover:bg-loss-subtle hover:text-loss"
                       onClick={() => {
                         setProfileOpen(false)
                         onLogout?.()
-                      }}
-                    >
+                      }}>
                       <LogOut className="h-4 w-4" />
                       Log out
                     </button>

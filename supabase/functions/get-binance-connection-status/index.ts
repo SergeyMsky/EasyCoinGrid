@@ -33,7 +33,12 @@ Deno.serve(async (req: Request) => {
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
 
-    const { data: connection, error: connectionError } = await supabaseAdmin.from('exchange_connections').select('status').eq('user_id', user.id).eq('exchange', 'binance').maybeSingle()
+    const { data: connection, error: connectionError } = await supabaseAdmin
+      .from('exchange_connections')
+      .select('status')
+      .eq('user_id', user.id)
+      .eq('exchange', 'binance')
+      .maybeSingle()
 
     if (connectionError) {
       throw connectionError

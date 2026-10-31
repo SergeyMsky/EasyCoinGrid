@@ -10,9 +10,12 @@ import { PortfolioErrorState } from '@/features/portfolio/components/PortfolioEr
 import { enrichAsset, sortAssets } from '@/features/portfolio/utils/portfolio.calculations'
 import { useSpotRotations } from '@/features/portfolio/hooks/useSpotRotations'
 import { ErrorMessage } from '@/shared/components/ErrorMessage'
-import { Link } from 'react-router-dom'
-import { ArrowRight } from 'lucide-react'
+import { ArrowUpRight, Repeat2 } from 'lucide-react'
 import { useSpotPortfolioHistory } from '@/features/portfolio/hooks/useSpotPortfolioHistory'
+import { ButtonLink } from '@/shared/components/Link'
+import { formatSignedCurrency } from '@/shared/utils/format-currency'
+import { formatCurrency } from '@/shared/utils/format-currency'
+import { APP_LOCALE } from '@/shared/utils/locale'
 
 const SpotPortfolioPerformance = lazy(() =>
   import('@/features/portfolio/components/SpotPortfolioPerformance').then(({ SpotPortfolioPerformance: component }) => ({
@@ -30,7 +33,17 @@ function getStoredView(): FilterOption {
 }
 
 export function Dashboard({ currency }: DashboardProps) {
-  const { assets, loading, error, refreshPortfolio, lastUpdated, binanceUnavailable, isBinanceConnected } = usePortfolioData()
+  const {
+    assets,
+    loading,
+    error,
+    refreshPortfolio,
+    lastUpdated,
+    binanceUnavailable,
+    isBinanceConnected,
+    stablecoinUsdRates,
+    stablecoinRatesUpdatedAt,
+  } = usePortfolioData()
   const { rotations, loading: rotationsLoading, error: rotationsError } = useSpotRotations({ assets: [], syncFromBinance: false })
   const [sortBy, setSortBy] = useState<SortOption>('Total')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
@@ -39,7 +52,9 @@ export function Dashboard({ currency }: DashboardProps) {
   const [rates, setRates] = useState<Record<Currency, number>>(FALLBACK_RATES)
   const currentRate = rates[currency] ?? 1
   const canValuePortfolio = !loading && assets.length > 0 && assets.every((asset) => Number.isFinite(asset.price) && asset.price > 0)
-  const currentValueUsd = canValuePortfolio ? assets.reduce((total, asset) => total + (Number(asset.free) + Number(asset.locked)) * asset.price, 0) : null
+  const currentValueUsd = canValuePortfolio
+    ? assets.reduce((total, asset) => total + (Number(asset.free) + Number(asset.locked)) * asset.price, 0)
+    : null
   const portfolioHistory = useSpotPortfolioHistory(currentValueUsd, isBinanceConnected === true)
 
   useEffect(() => {
@@ -117,48 +132,31 @@ export function Dashboard({ currency }: DashboardProps) {
   }, [filteredAssets, view])
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-10">
-      <h1 className="text-2xl font-bold sm:text-4xl ">Binance Spot Wallet Balance</h1>
+    <section className="mx-auto px-4 py-10">
+      <div>
+        <p className="label mb-2 text-accent">Binance Spot</p>
+        <h1 className="text-3xl font-bold">Portfolio overview</h1>
+        <p className="mt-2 text-sm text-muted">Track your portfolio balance, asset allocation, and performance at a glance.</p>
+      </div>
 
       <ErrorMessage message={rotationsError} />
-      <section className="mt-8 rounded-md border border-white/10 bg-white/5 p-4 backdrop-blur-md sm:p-5">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-semibold">Spot rotations</h2>
-            <p className="mt-1 text-sm text-gray-400">Track realized profit from individual spot trades.</p>
-          </div>
-          <Link
-            to="/rotations"
-            className="inline-flex items-center gap-2 rounded-md border border-emerald-400/20 bg-emerald-400/10 px-3 py-2 text-sm font-medium text-emerald-300 transition hover:border-emerald-400 hover:bg-emerald-400/20"
-          >
-            View rotations <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </Link>
-        </div>
-      </section>
-      {!rotationsLoading && (
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-md border border-white/5 bg-black/10 px-4 py-3">
-            <p className="label">Open rotations</p>
-            <p className="mt-1 text-xl font-semibold">{rotations.filter((rotation) => rotation.status === 'OPEN').length}</p>
-          </div>
-          <div className="rounded-md border border-white/5 bg-black/10 px-4 py-3">
-            <p className="label">Realized PnL</p>
-            <p className={`mt-1 text-xl font-semibold ${rotations.reduce((total, rotation) => total + (rotation.realized_pnl_usd ?? 0), 0) >= 0 ? 'text-[#00A857]' : 'text-[#FF4D4D]'}`}>
-              {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', signDisplay: 'always' }).format(rotations.reduce((total, rotation) => total + (rotation.realized_pnl_usd ?? 0), 0))}
-            </p>
-          </div>
-        </div>
-      )}
-      {rotationsLoading && <p className="mt-4 text-sm text-gray-400">Loading rotation summary…</p>}
       {!loading && error ? (
-        <PortfolioErrorState onRetry={refreshPortfolio} loading={loading} />
+        <PortfolioErrorState onRetry={refreshPortfolio} loading={loading} message={`${error} Please try again.`} />
       ) : !loading && isBinanceConnected === false ? (
         <NoConnectionState />
       ) : (
         <>
           {binanceUnavailable && <WarningMessage message="Binance is temporarily unavailable. Please try again later." />}
-
-          <Suspense fallback={<div aria-hidden="true" className="mt-6 h-72 animate-pulse rounded-xl border border-white/10 bg-[#0c100e]" />}>
+          <PortfolioSummary assets={displayAssets} loading={loading} currency={currency} />
+          {stablecoinUsdRates && stablecoinRatesUpdatedAt && (
+            <p className="mt-2 text-xs text-muted" role="note">
+              Current Kraken rates: 1 USDT = {formatCurrency(stablecoinUsdRates.USDT, 'USD')}; 1 USDC ={' '}
+              {formatCurrency(stablecoinUsdRates.USDC, 'USD')} (updated{' '}
+              {new Intl.DateTimeFormat(APP_LOCALE, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(stablecoinRatesUpdatedAt))}). Average
+              buy prices, portfolio history, and historical P/L remain approximate and assume 1 USDT ≈ 1 USD.
+            </p>
+          )}
+          <Suspense fallback={<div aria-hidden="true" className="mt-6 h-72 animate-pulse rounded-lg border border-outline bg-surface" />}>
             <SpotPortfolioPerformance
               snapshots={portfolioHistory.snapshots}
               loading={portfolioHistory.loading}
@@ -166,9 +164,36 @@ export function Dashboard({ currency }: DashboardProps) {
               enabled={isBinanceConnected === true}
               assets={displayAssets}
               currency={currency}
+              currencyRate={currentRate}
             />
           </Suspense>
-          <PortfolioSummary assets={displayAssets} loading={loading} currency={currency} />
+          {!rotationsLoading && (
+            <div className="ui-surface mt-4 flex flex-col items-start gap-4 p-4 sm:flex-row sm:items-center">
+              <div className="flex flex-1 items-center gap-2">
+                <Repeat2 className="h-5 w-5 shrink-0" aria-hidden="true" />
+                <div>
+                  <h2 className="text-lg font-semibold">Spot rotations</h2>
+                  <p className="mt-1 text-sm text-muted">Track realized profit from individual spot trades.</p>
+                </div>
+              </div>
+              <div className="border-outline pr-4 sm:border-r">
+                <p className="label">Open rotations</p>
+                <p className="mt-1 text-xl font-semibold">{rotations.filter((rotation) => rotation.status === 'OPEN').length}</p>
+              </div>
+              <div>
+                <p className="label">Realized PnL ({currency})</p>
+                <p
+                  className={`mt-1 text-xl font-semibold ${rotations.reduce((total, rotation) => total + (rotation.realized_pnl_usd ?? 0), 0) >= 0 ? 'text-profit' : 'text-loss'}`}>
+                  {formatSignedCurrency(rotations.reduce((total, rotation) => total + (rotation.realized_pnl_usd ?? 0), 0) * currentRate, currency)}
+                </p>
+              </div>
+              <ButtonLink to="/rotations" size="sm">
+                View rotations
+                <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+              </ButtonLink>
+            </div>
+          )}
+          {rotationsLoading && <p className="mt-4 text-sm text-muted">Loading rotation summary…</p>}
           <PortfolioTable
             assets={visibleAssets}
             sortBy={sortBy}

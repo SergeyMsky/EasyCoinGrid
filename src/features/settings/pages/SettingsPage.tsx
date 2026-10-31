@@ -1,6 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { AlertCircle, Camera, CheckCircle2, Eye, EyeOff, Network, ShieldCheck, UserRound, type LucideIcon } from 'lucide-react'
-import { connectBinance, disconnectBinance, getBinanceConnectionStatus, updateEmail, updatePassword, verifyCurrentPassword } from '@/features/settings/api/settings.api'
+import {
+  connectBinance,
+  disconnectBinance,
+  getBinanceConnectionStatus,
+  updateEmail,
+  updatePassword,
+  verifyCurrentPassword,
+} from '@/features/settings/api/settings.api'
 import { useSearchParams } from 'react-router-dom'
 import { ErrorMessage } from '@/shared/components/ErrorMessage'
 import { SuccessMessage } from '@/shared/components/SuccessMessage'
@@ -11,12 +18,12 @@ import { Button } from '@/shared/components/Button'
 import type { Session } from '@supabase/supabase-js'
 import { getAvatarUrl, uploadAvatar } from '@/services/avatar'
 
-type SettingsTab = 'profile' | 'security' | 'connections'
+type SettingsTab = 'account' | 'security' | 'exchanges'
 
 const tabs: Array<{ value: SettingsTab; label: string; icon: LucideIcon }> = [
-  { value: 'profile', label: 'Profile', icon: UserRound },
+  { value: 'account', label: 'Account', icon: UserRound },
   { value: 'security', label: 'Security', icon: ShieldCheck },
-  { value: 'connections', label: 'Connections', icon: Network },
+  { value: 'exchanges', label: 'Exchanges', icon: Network },
 ]
 
 type SettingsProps = {
@@ -32,11 +39,16 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
   const [avatarError, setAvatarError] = useState<string | null>(null)
 
   const [email, setEmail] = useState(userEmail || '')
+  const [emailCurrentPassword, setEmailCurrentPassword] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
   const [emailSuccess, setEmailSuccess] = useState<string | null>(null)
   const [emailLoading, setEmailLoading] = useState(false)
 
-  const [password, setPassword] = useState({ current: '', new: '', confirm: '' })
+  const [password, setPassword] = useState({
+    current: '',
+    new: '',
+    confirm: '',
+  })
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null)
   const [passwordLoading, setPasswordLoading] = useState(false)
@@ -44,6 +56,7 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
   const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showEmailCurrentPassword, setShowEmailCurrentPassword] = useState(false)
 
   const [apiKey, setApiKey] = useState('')
   const [apiSecret, setApiSecret] = useState('')
@@ -58,7 +71,7 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
 
   const [searchParams, setSearchParams] = useSearchParams()
   const queryTab = searchParams.get('tab')
-  const activeTab: SettingsTab = queryTab === 'security' || queryTab === 'connections' ? queryTab : 'profile'
+  const activeTab: SettingsTab = queryTab === 'security' ? queryTab : queryTab === 'exchanges' || queryTab === 'connections' ? 'exchanges' : 'account'
 
   useEffect(() => {
     async function fetchConnectionStatus() {
@@ -98,18 +111,29 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
     }
 
     setEmailLoading(true)
+    try {
+      const { error: passwordError } = await verifyCurrentPassword(userEmail, emailCurrentPassword)
 
-    const { error: updateError } = await updateEmail(nextEmail)
+      if (passwordError) {
+        setEmailError('Current password is incorrect.')
+        return
+      }
 
-    setEmailLoading(false)
+      const { error: updateError } = await updateEmail(nextEmail)
 
-    if (updateError) {
-      setEmailError(updateError.message)
-      return
+      if (updateError) {
+        setEmailError(updateError.message)
+        return
+      }
+
+      setEmail(nextEmail)
+      setEmailCurrentPassword('')
+      setEmailSuccess('Check your new email to confirm the change.')
+    } catch (error) {
+      setEmailError(error instanceof Error ? error.message : 'Unable to update email.')
+    } finally {
+      setEmailLoading(false)
     }
-
-    setEmail(nextEmail)
-    setEmailSuccess('Check your new email to confirm the change.')
   }
 
   async function handlePasswordSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -264,45 +288,57 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10">
+    <main className="mx-auto px-4 py-10">
       <div className="mb-8">
         <p className="label mb-2">Account</p>
-        <h1 className="text-3xl font-bold mb-2">Settings</h1>
-        <p className="text-sm text-gray-500">Manage your profile, security, and connected exchanges.</p>
+        <h1 className="mb-2 text-3xl font-bold">Settings</h1>
+        <p className="text-sm text-muted">Manage your account, security, and connected exchanges.</p>
       </div>
-      <div className="grid gap-4 max-w-4xl md:grid-cols-[200px_minmax(0,1fr)]">
-        <aside className="h-fit ui-surface bg-black/10 p-2">
+      <div className="grid max-w-4xl gap-4 md:grid-cols-[200px_minmax(0,1fr)]">
+        <aside className="ui-surface h-fit p-2">
           <nav className="flex flex-col gap-1">
             {tabs.map((tab) => (
               <button
                 key={tab.value}
                 type="button"
                 onClick={() => setSearchParams({ tab: tab.value })}
-                className={`flex items-center gap-2 cursor-pointer rounded-md px-3 py-2 text-left text-sm transition font-medium ${activeTab === tab.value ? 'bg-emerald-400 text-black' : 'text-gray-500 hover:bg-white/10 hover:text-white'}`}
-              >
+                className={`flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-left text-sm font-medium transition ${activeTab === tab.value ? 'bg-accent text-on-accent' : 'text-muted hover:bg-surface-raised hover:text-text'}`}>
                 <tab.icon className="inline-block h-4 w-4" />
                 {tab.label}
               </button>
             ))}
           </nav>
         </aside>
-        {activeTab === 'profile' && (
-          <section className="ui-surface bg-black/10 p-6">
-            <h2 className="text-lg font-semibold mb-1">Profile</h2>
-            <p className="text-sm text-gray-500">Your public account information.</p>
+        {activeTab === 'account' && (
+          <section className="ui-surface p-6">
+            <h2 className="mb-1 text-lg font-semibold">Account</h2>
+            <p className="text-sm text-muted">Manage your account details and profile photo.</p>
             {userEmail && (
               <>
                 <div className="mt-6 flex gap-4">
-                  <div className="flex h-15 w-15 items-center justify-center rounded-md text-emerald-400 bg-emerald-400/20 text-2xl font-medium overflow-hidden">
+                  <div className="flex h-15 w-15 items-center justify-center overflow-hidden rounded-md bg-accent-subtle text-2xl font-medium text-accent">
                     {avatarUrl ? <img src={avatarUrl} alt="Profile avatar" className="h-full w-full object-cover" /> : userEmail[0].toUpperCase()}
                   </div>
                   <div>
-                    <input ref={profilePhotoInputRef} type="file" name="profilePhoto" id="profilePhoto" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={handleAvatarChange} />
-                    <Button type="button" size="sm" className="text-sm" onClick={() => profilePhotoInputRef.current?.click()} disabled={avatarLoading}>
+                    <input
+                      ref={profilePhotoInputRef}
+                      type="file"
+                      name="profilePhoto"
+                      id="profilePhoto"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={handleAvatarChange}
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="text-sm"
+                      onClick={() => profilePhotoInputRef.current?.click()}
+                      disabled={avatarLoading}>
                       {avatarLoading ? <Spinner /> : <Camera className="h-4 w-4" />}
                       {avatarLoading ? 'Uploading...' : 'Change photo'}
                     </Button>
-                    <p className="mt-1.5 text-xs text-gray-500">JPG, PNG, or WebP. Max 2 MB.</p>
+                    <p className="mt-1.5 text-xs text-muted">JPG, PNG, or WebP. Max 2 MB.</p>
                   </div>
                 </div>
                 <ErrorMessage message={avatarError} />
@@ -311,7 +347,38 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
             <form onSubmit={handleEmailSubmit} className="mt-6">
               <label className="flex flex-1 flex-col gap-2">
                 <span className="label">Email address</span>
-                <input className="input px-4 py-3" type="email" name="email" id="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <input
+                  className="input px-4 py-3"
+                  type="email"
+                  name="email"
+                  id="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </label>
+              <label className="mt-4 flex flex-col gap-2">
+                <span className="label">Current password to confirm</span>
+                <div className="relative">
+                  <input
+                    name="email-current-password"
+                    value={emailCurrentPassword}
+                    onChange={(event) => setEmailCurrentPassword(event.target.value)}
+                    className="input px-4 py-3 pr-11"
+                    type={showEmailCurrentPassword ? 'text' : 'password'}
+                    autoComplete="current-password"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button
+                    type="button"
+                    aria-label={showEmailCurrentPassword ? 'Hide current password' : 'Show current password'}
+                    onClick={() => setShowEmailCurrentPassword((visible) => !visible)}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted hover:text-text">
+                    {showEmailCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </label>
               <ErrorMessage message={emailError} />
               <SuccessMessage message={emailSuccess} />
@@ -323,9 +390,9 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
           </section>
         )}
         {activeTab === 'security' && (
-          <section className="ui-surface bg-black/10 p-6">
-            <h2 className="text-lg font-semibold mb-1">Password</h2>
-            <p className="text-sm text-gray-500">Use a strong, unique password for your account.</p>
+          <section className="ui-surface p-6">
+            <h2 className="mb-1 text-lg font-semibold">Password</h2>
+            <p className="text-sm text-muted">Use a strong, unique password for your account.</p>
             <form onSubmit={handlePasswordSubmit} className="mt-6">
               <div className="grid gap-4">
                 <label className="flex flex-col gap-2">
@@ -333,7 +400,12 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
                   <div className="relative">
                     <input
                       value={password.current}
-                      onChange={(event) => setPassword({ ...password, current: event.target.value })}
+                      onChange={(event) =>
+                        setPassword({
+                          ...password,
+                          current: event.target.value,
+                        })
+                      }
                       className="input px-4 py-3 pr-11"
                       type={showCurrentPassword ? 'text' : 'password'}
                       autoComplete="current-password"
@@ -343,8 +415,7 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
                     <button
                       type="button"
                       onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
-                    >
+                      className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted hover:text-text">
                       {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
@@ -361,7 +432,10 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
                       placeholder="••••••••"
                       required
                     />
-                    <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted hover:text-text">
                       {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
@@ -371,7 +445,12 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
                   <div className="relative">
                     <input
                       value={password.confirm}
-                      onChange={(event) => setPassword({ ...password, confirm: event.target.value })}
+                      onChange={(event) =>
+                        setPassword({
+                          ...password,
+                          confirm: event.target.value,
+                        })
+                      }
                       className="input px-4 py-3 pr-11"
                       type={showConfirmPassword ? 'text' : 'password'}
                       autoComplete="new-password"
@@ -381,8 +460,7 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="cursor-pointer absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white"
-                    >
+                      className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted hover:text-text">
                       {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
@@ -397,26 +475,26 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
             </form>
           </section>
         )}
-        {activeTab === 'connections' && (
-          <section className="ui-surface bg-black/10 p-6">
-            <div className="mb-6 flex items-start justify-between gap-y-4 gap-x-10 flex-col sm:flex-row">
+        {activeTab === 'exchanges' && (
+          <section className="ui-surface p-6">
+            <div className="mb-6 flex flex-col items-start justify-between gap-x-10 gap-y-4 sm:flex-row">
               <div>
-                <h2 className="text-lg font-semibold mb-1">Exchange connections</h2>
-                <p className="text-sm text-gray-500">Link accounts to sync balances and portfolio performance.</p>
+                <h2 className="mb-1 text-lg font-semibold">Exchange connections</h2>
+                <p className="text-sm text-muted">Link accounts to sync balances and portfolio performance.</p>
               </div>
-              <div className="flex flex-col items-center gap-2 whitespace-nowrap self-end sm:self-start order-first sm:order-0">
+              <div className="order-first flex flex-col items-center gap-2 self-end whitespace-nowrap sm:order-0 sm:self-start">
                 {connectionStatusLoading ? (
-                  <span className="inline-flex items-center justify-center gap-1.5 ui-surface border-blue-500/20! bg-blue-500/10! px-2 py-1 text-xs text-blue-400">
+                  <span className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-accent-outline bg-accent-subtle px-2 py-1 text-xs text-accent">
                     <Spinner className="size-3.5" />
                     Connecting...
                   </span>
                 ) : isBinanceConnected ? (
-                  <span className="inline-flex items-center justify-center gap-1.5 ui-surface border-green-500/20! bg-green-500/10! px-2 py-1 text-xs text-green-400">
+                  <span className="ui-surface inline-flex items-center justify-center gap-1.5 rounded-md border-profit-outline bg-profit-subtle px-2 py-1 text-xs text-profit">
                     <CheckCircle2 className="h-3.5 w-3.5" />
                     Connected
                   </span>
                 ) : (
-                  <span className="inline-flex items-center justify-center gap-1.5 ui-surface border-yellow-500/20! bg-yellow-500/10! px-2 py-1 text-xs text-yellow-400">
+                  <span className="ui-surface inline-flex items-center justify-center gap-1.5 rounded-md border-warning-outline bg-warning-subtle px-2 py-1 text-xs text-warning">
                     <AlertCircle className="h-3.5 w-3.5" />
                     Not connected
                   </span>
@@ -429,24 +507,30 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
               </div>
             ) : isBinanceConnected ? (
               <div>
-                <div className="ui-surface bg-white/1! p-4">
+                <div className="ui-surface bg-surface-raised p-4">
                   <div className="flex items-center gap-3">
                     <img src={binance} alt="Binance" className="h-8 w-8" />
                     <div>
                       <h3 className="text-sm font-medium">Binance</h3>
-                      <p className="text-xs text-gray-500">Your account is connected and ready to sync.</p>
+                      <p className="text-xs text-muted">Your account is connected and ready to sync.</p>
                     </div>
                   </div>
-                  <p className="mt-4 text-xs leading-5 text-gray-400">
-                    easycoingrid can securely read your Binance balances and market data using your read-only API credentials. Trading and withdrawals are not available.
+                  <p className="mt-4 text-xs leading-5 text-muted">
+                    easycoingrid can securely read your Binance balances and market data using your read-only API credentials. Trading and withdrawals
+                    are not available.
                   </p>
                 </div>
                 <ErrorMessage message={connectionError} />
                 <SuccessMessage message={connectionSuccess} />
                 {isConfirmingDisconnect ? (
-                  <>
-                    <div className="mt-5 flex gap-2">
-                      <Button type="button" size="sm" onClick={() => setIsConfirmingDisconnect(false)} className="border-green-500/20 bg-green-500/10 text-green-400">
+                  <div role="status" className="ui-surface mt-5 border-warning-outline bg-warning-subtle p-4 text-sm text-warning">
+                    <p>Are you sure you want to disconnect Binance? Your portfolio data will no longer be synced.</p>
+                    <div className="mt-4 flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setIsConfirmingDisconnect(false)}
+                        className="border-profit-outline bg-profit-subtle text-profit">
                         Cancel
                       </Button>
                       <Button
@@ -458,17 +542,13 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
                             setIsConfirmingDisconnect(false)
                           }
                         }}
-                        className="border-red-500/20 bg-red-500/10 text-red-400"
-                        disabled={connectionLoading}
-                      >
+                        className="border-loss-outline bg-loss-subtle text-loss"
+                        disabled={connectionLoading}>
                         {connectionLoading && <Spinner />}
                         {connectionLoading ? 'Disconnecting...' : 'Disconnect Binance'}
                       </Button>
                     </div>
-                    <p className="mt-5 text-sm text-gray-300">
-                      Are you sure you want to disconnect Binance? <br /> Your portfolio data will no longer be synced.
-                    </p>
-                  </>
+                  </div>
                 ) : (
                   <Button type="button" size="sm" onClick={() => setIsConfirmingDisconnect(true)} className="mt-5">
                     Disconnect Binance
@@ -480,7 +560,14 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
                 <div className="grid gap-4">
                   <label className="flex flex-col gap-2">
                     <span className="label">API Key</span>
-                    <input className="input px-4 py-3" onChange={(event) => setApiKey(event.target.value)} value={apiKey} autoComplete="off" placeholder="Enter Binance API key" required />
+                    <input
+                      className="input px-4 py-3"
+                      onChange={(event) => setApiKey(event.target.value)}
+                      value={apiKey}
+                      autoComplete="off"
+                      placeholder="Enter Binance API key"
+                      required
+                    />
                   </label>
                   <label className="flex flex-col gap-2">
                     <span className="label">API Secret</span>
@@ -495,8 +582,8 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
                     />
                   </label>
                 </div>
-                <p className="mt-4 text-xs text-gray-500">
-                  In Binance, enable <span className="text-green-400">Read</span> permission only. Leave trading and withdrawals disabled.
+                <p className="mt-4 text-xs text-muted">
+                  In Binance, enable <span className="text-profit">Read</span> permission only. Leave trading and withdrawals disabled.
                 </p>
                 <ErrorMessage message={connectionError} />
                 <SuccessMessage message={connectionSuccess} />
@@ -506,18 +593,18 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
                 </Button>
               </form>
             )}
-            <div className="mt-8 grid gap-4 border-t border-white/10 pt-6 sm:grid-cols-3">
-              <div className="ui-surface p-4 bg-white/1!">
-                <h3 className="text-sm font-medium mb-2">Read-only access</h3>
-                <p className="text-xs leading-5 text-gray-400">easycoingrid only reads balances and market data. It cannot trade or withdraw funds.</p>
+            <div className="mt-8 grid gap-4 border-t border-outline pt-6 sm:grid-cols-3">
+              <div className="ui-surface bg-app p-4">
+                <h3 className="mb-2 text-sm font-medium">Read-only access</h3>
+                <p className="text-xs leading-5 text-muted">easycoingrid only reads balances and market data. It cannot trade or withdraw funds.</p>
               </div>
-              <div className="ui-surface p-4 bg-white/1!">
-                <h3 className="text-sm font-medium mb-2">You stay in control</h3>
-                <p className="text-xs leading-5 text-gray-400">Disconnect Binance whenever you want from this page or revoke the key in Binance.</p>
+              <div className="ui-surface bg-app p-4">
+                <h3 className="mb-2 text-sm font-medium">You stay in control</h3>
+                <p className="text-xs leading-5 text-muted">Disconnect Binance whenever you want from this page or revoke the key in Binance.</p>
               </div>
-              <div className="ui-surface p-4 bg-white/1!">
-                <h3 className="text-sm font-medium mb-2">Encrypted connection</h3>
-                <p className="text-xs leading-5 text-gray-400">Your credentials are sent through a secure connection.</p>
+              <div className="ui-surface bg-app p-4">
+                <h3 className="mb-2 text-sm font-medium">Encrypted connection</h3>
+                <p className="text-xs leading-5 text-muted">Your credentials are sent through a secure connection.</p>
               </div>
             </div>
           </section>

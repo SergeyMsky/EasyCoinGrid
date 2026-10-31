@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
-import { BinanceNotConnectedError, BinanceUnavailableError, getBinanceAvgBuy, getBinancePrice, getCoinsMetadata, getPortfolioBalances } from '../api/portfolio.api'
+import {
+  BinanceNotConnectedError,
+  BinanceUnavailableError,
+  getBinanceAvgBuy,
+  getBinancePrice,
+  getCoinsMetadata,
+  getPortfolioBalances,
+} from '../api/portfolio.api'
+import { getStablecoinUsdRates, StablecoinUsdRatesUnavailableError } from '../api/usdt-usd-rate.api'
 import type { Asset } from '@/features/portfolio/portfolio.types'
 import { mockPortfolio } from '../portfolio.mock'
 
@@ -10,6 +18,8 @@ export function usePortfolioData() {
   const [assets, setAssets] = useState<Asset[]>([])
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
   const [isBinanceConnected, setIsBinanceConnected] = useState<boolean | null>(null)
+  const [stablecoinUsdRates, setStablecoinUsdRates] = useState<{ USDT: number; USDC: number } | null>(null)
+  const [stablecoinRatesUpdatedAt, setStablecoinRatesUpdatedAt] = useState<string | null>(null)
 
   const loadPortfolio = useCallback(async () => {
     try {
@@ -30,6 +40,9 @@ export function usePortfolioData() {
 
       const balances = await getPortfolioBalances()
       setIsBinanceConnected(true)
+      const currentStablecoinRates = await getStablecoinUsdRates()
+      setStablecoinUsdRates(currentStablecoinRates.rates)
+      setStablecoinRatesUpdatedAt(currentStablecoinRates.updatedAt)
 
       let metadata: Record<string, { name: string; image: string | null }> = {}
 
@@ -42,8 +55,10 @@ export function usePortfolioData() {
       const portfolioAssets = await Promise.all(
         balances.map(async (asset) => {
           const [priceResult, avgBuyResult] = await Promise.allSettled([getBinancePrice(asset.asset), getBinanceAvgBuy(asset.asset)])
-          const price = priceResult.status === 'fulfilled' ? priceResult.value.price : 0
-          const change24h = priceResult.status === 'fulfilled' ? priceResult.value.change24h : 0
+          const quoteUsdRate =
+            asset.asset === 'USDC' || asset.asset === 'LDUSDC' ? currentStablecoinRates.rates.USDC : currentStablecoinRates.rates.USDT
+          const price = priceResult.status === 'fulfilled' ? priceResult.value.price * quoteUsdRate : 0
+          const change24h = priceResult.status === 'fulfilled' ? priceResult.value.change24h * quoteUsdRate : 0
           const avgBuy = avgBuyResult.status === 'fulfilled' ? avgBuyResult.value.avgBuy : null
           const change24hPercent = priceResult.status === 'fulfilled' ? Number(priceResult.value.change24hPercent) : 0
 
@@ -80,17 +95,25 @@ export function usePortfolioData() {
         setError(null)
         setBinanceUnavailable(false)
         setLastUpdated(null)
+        setStablecoinUsdRates(null)
+        setStablecoinRatesUpdatedAt(null)
         return
       }
       console.error('Failed to load portfolio:', loadError)
-      setError('Unable to load your portfolio.')
+      setError(loadError instanceof StablecoinUsdRatesUnavailableError ? loadError.message : 'Unable to load your portfolio.')
     } finally {
       setLoading(false)
     }
   }, [])
 
   useEffect(() => {
-    void loadPortfolio()
+    let active = true
+
+    queueMicrotask(() => {
+      if (active) {
+        void loadPortfolio()
+      }
+    })
 
     const intervalId = setInterval(
       () => {
@@ -98,12 +121,25 @@ export function usePortfolioData() {
       },
       5 * 60 * 1000,
     )
-    return () => clearInterval(intervalId)
+    return () => {
+      active = false
+      clearInterval(intervalId)
+    }
   }, [loadPortfolio])
 
   const refreshPortfolio = useCallback(() => {
     void loadPortfolio()
   }, [loadPortfolio])
 
-  return { assets, loading, error, refreshPortfolio, lastUpdated, binanceUnavailable, isBinanceConnected }
+  return {
+    assets,
+    loading,
+    error,
+    refreshPortfolio,
+    lastUpdated,
+    binanceUnavailable,
+    isBinanceConnected,
+    stablecoinUsdRates,
+    stablecoinRatesUpdatedAt,
+  }
 }

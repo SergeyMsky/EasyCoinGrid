@@ -10,14 +10,30 @@ type PortfolioSummaryProps = {
 
 function PortfolioSummarySkeleton() {
   return (
-    <ul className="mb-4 mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 *:flex *:flex-col *:basis-1/4 *:gap-1">
-      {Array.from({ length: 4 }).map((_, index) => (
-        <li key={index} className="ui-surface px-4 py-4">
-          <div className="h-4 w-20 rounded bg-white/5 animate-pulse" />
-          <div className="h-7 sm:h-8 w-32 rounded bg-white/5 animate-pulse" />
-          <div className="h-4 w-25 rounded bg-white/5 animate-pulse" />
-        </li>
-      ))}
+    <ul
+      aria-label="Loading portfolio summary"
+      aria-busy="true"
+      className="ui-surface mt-4 grid grid-cols-1 gap-4 overflow-hidden px-4 py-4 *:flex *:basis-1/4 *:flex-col *:gap-1 *:border-r *:border-outline *:last:border-0 sm:grid-cols-2 lg:grid-cols-4">
+      <li>
+        <span className="label">Total Value</span>
+        <span aria-hidden="true" className="h-7 w-32 animate-pulse rounded bg-surface-raised sm:h-8" />
+        <span aria-hidden="true" className="h-4 w-25 animate-pulse rounded bg-surface-raised" />
+      </li>
+      <li>
+        <span className="label">24h Change</span>
+        <span aria-hidden="true" className="h-7 w-32 animate-pulse rounded bg-surface-raised sm:h-8" />
+        <span aria-hidden="true" className="h-4 w-16 animate-pulse rounded bg-surface-raised" />
+      </li>
+      <li>
+        <span className="label">Total P/L</span>
+        <span aria-hidden="true" className="h-7 w-32 animate-pulse rounded bg-surface-raised sm:h-8" />
+        <span aria-hidden="true" className="h-4 w-20 animate-pulse rounded bg-surface-raised" />
+      </li>
+      <li>
+        <span className="label">Best 24h</span>
+        <span aria-hidden="true" className="h-7 w-36 animate-pulse rounded bg-surface-raised sm:h-8" />
+        <span aria-hidden="true" className="h-4 w-28 animate-pulse rounded bg-surface-raised" />
+      </li>
     </ul>
   )
 }
@@ -51,41 +67,48 @@ export function PortfolioSummary({ assets, loading, currency }: PortfolioSummary
   }
 
   return (
-    <ul className="mb-4 mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 *:flex *:flex-col *:basis-1/4 *:gap-1">
-      <li className="ui-surface px-4 py-4">
+    <ul className="ui-surface mt-4 grid grid-cols-1 gap-4 overflow-hidden px-4 py-4 *:flex *:basis-1/4 *:flex-col *:gap-1 *:border-r *:border-outline *:last:border-0 sm:grid-cols-2 lg:grid-cols-4">
+      <li>
         <span className="label">Total Value</span>
         <strong className="text-xl sm:text-2xl">{formatCurrency(totalValue, currency)}</strong>
-        <span className="text-xs text-gray-300">{assets.length} assets tracked</span>
+        <span className="text-xs text-subtle">{assets.length} assets tracked</span>
       </li>
-      <li className="ui-surface px-4 py-4">
+      <li>
         <span className="label">24h Change</span>
-        <strong className={`text-xl sm:text-2xl ${priceChange >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{formatSignedCurrency(priceChange, currency)}</strong>
-        <span className={`text-xs ${priceChangePercent >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{formatSignedValue(priceChangePercent, '', '%')}</span>
+        <strong className={`text-xl sm:text-2xl ${priceChange >= 0 ? 'text-profit' : 'text-loss'}`}>
+          {formatSignedCurrency(priceChange, currency)}
+        </strong>
+        <span className={`text-xs ${priceChangePercent >= 0 ? 'text-profit' : 'text-loss'}`}>{formatSignedValue(priceChangePercent, '', '%')}</span>
       </li>
-      <li className="ui-surface px-4 py-4">
+      <li>
         <span className="label">Total P/L</span>
-        <strong className={`text-xl sm:text-2xl ${totalProfitLoss >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{formatSignedCurrency(totalProfitLoss, currency)}</strong>
-        <div className="text-xs text-gray-500">
-          <span className={`text-xs ${totalProfitLossPercent === null ? 'text-gray-300' : totalProfitLossPercent >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+        <strong className={`text-xl sm:text-2xl ${totalProfitLoss >= 0 ? 'text-profit' : 'text-loss'}`}>
+          {formatSignedCurrency(totalProfitLoss, currency)}
+        </strong>
+        <div className="text-xs text-subtle">
+          <span className={`text-xs ${totalProfitLossPercent === null ? 'text-subtle' : totalProfitLossPercent >= 0 ? 'text-profit' : 'text-loss'}`}>
             {totalProfitLossPercent === null ? '—' : `${formatSignedValue(totalProfitLossPercent, '', '%')}`}
           </span>{' '}
           all time
         </div>
       </li>
-      <li className="ui-surface px-4 py-4">
+      <li>
         <span className="label">Best 24h</span>
         {bestAsset ? (
           <>
-            <strong className="text-xl sm:text-2xl flex gap-2">
-              {bestAsset.image && <img src={bestAsset.image} alt={bestAsset.asset} className="w-7.5 h-7.5" />}
-              {bestAsset.asset} <span className={`${bestAsset.change24hPercent >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{formatSignedValue(bestAsset.change24hPercent, '', '%')}</span>
+            <strong className="flex gap-2 text-xl sm:text-2xl">
+              {bestAsset.image && <img src={bestAsset.image} alt={bestAsset.asset} className="h-7.5 w-7.5" />}
+              {bestAsset.asset}{' '}
+              <span className={`${bestAsset.change24hPercent >= 0 ? 'text-profit' : 'text-loss'}`}>
+                {formatSignedValue(bestAsset.change24hPercent, '', '%')}
+              </span>
             </strong>
-            <span className="text-xs text-gray-500">Top performer today</span>
+            <span className="text-xs text-subtle">Top performer today</span>
           </>
         ) : (
           <>
             <strong className="text-xl sm:text-2xl">—</strong>
-            <span className="text-xs text-gray-500">No data</span>
+            <span className="text-xs text-subtle">No data</span>
           </>
         )}
       </li>

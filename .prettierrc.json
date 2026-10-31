@@ -1,0 +1,8 @@
+{
+  "plugins": ["prettier-plugin-tailwindcss"],
+  "tailwindStylesheet": "./src/index.css",
+  "semi": false,
+  "singleQuote": true,
+  "bracketSameLine": true,
+  "printWidth": 150
+}

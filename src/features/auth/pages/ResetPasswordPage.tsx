@@ -63,10 +63,10 @@ export function ResetPasswordPage() {
 
   return (
     <main className="flex min-h-[calc(100vh-67px)] items-center justify-center px-4 py-10">
-      <form onSubmit={handleSubmit} className="w-full max-w-lg ui-surface p-6 shadow-xl shadow-black/50 sm:p-8">
+      <form onSubmit={handleSubmit} className="ui-surface w-full max-w-lg p-6 sm:p-8">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-semibold">Set a new password</h1>
-          <p className="mt-2 text-sm text-gray-400">Choose a strong password to secure your account.</p>
+          <p className="mt-2 text-sm text-muted">Choose a strong password to secure your account.</p>
         </div>
         <label className="flex flex-col gap-2">
           <span className="label">New password</span>
@@ -84,13 +84,12 @@ export function ResetPasswordPage() {
               type="button"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
               onClick={() => setShowPassword((visible) => !visible)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-white"
-            >
+              className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted hover:text-text">
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
         </label>
-        <p className="mt-2 text-xs text-gray-500">Use at least 8 characters with uppercase, lowercase, number, and special character.</p>
+        <p className="mt-2 text-xs text-muted">Use at least 8 characters with uppercase, lowercase, number, and special character.</p>
         <label className="mt-4 flex flex-col gap-2">
           <span className="label">Confirm new password</span>
           <div className="relative">
@@ -107,8 +106,7 @@ export function ResetPasswordPage() {
               type="button"
               aria-label={showConfirmPassword ? 'Hide password confirmation' : 'Show password confirmation'}
               onClick={() => setShowConfirmPassword((visible) => !visible)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-white"
-            >
+              className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted hover:text-text">
               {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
@@ -119,7 +117,10 @@ export function ResetPasswordPage() {
           {loading && <Spinner />}
           {loading ? 'Updating...' : 'Update password'}
         </Button>
-        <button type="button" onClick={() => navigate('/auth')} className="mt-4 mx-auto block text-center cursor-pointer text-sm text-gray-400 hover:text-white">
+        <button
+          type="button"
+          onClick={() => navigate('/auth')}
+          className="mx-auto mt-4 block cursor-pointer text-center text-sm text-muted hover:text-text">
           Back to login
         </button>
       </form>

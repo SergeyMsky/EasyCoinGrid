@@ -26,7 +26,11 @@ const filterButtons: Array<{ label: string; value: FilterOption }> = [
   { label: 'Gainers', value: 'gainers' },
   { label: 'Losers', value: 'losers' },
 ]
-const columnButtons: Array<{ label: string; value: SortOption; className?: string }> = [
+const columnButtons: Array<{
+  label: string
+  value: SortOption
+  className?: string
+}> = [
   { label: 'Name', value: 'Name', className: 'justify-start' },
   { label: 'Amount', value: 'Amount' },
   { label: '24h Change', value: 'Change' },
@@ -36,141 +40,183 @@ const columnButtons: Array<{ label: string; value: SortOption; className?: strin
   { label: 'P/L', value: 'Pl' },
 ]
 
-const tableGrid = 'min-w-225 grid grid-cols-[minmax(160px,1fr)_repeat(6,minmax(100px,0.5fr))] lg:grid-cols-[minmax(150px,1.5fr)_repeat(6,1fr)] items-center gap-4 lg:gap-6'
-
 function PortfolioSkeleton() {
   return (
-    <ul aria-label="Loading portfolio" className="border-l border-r border-white/10">
+    <tbody aria-label="Loading portfolio">
       {Array.from({ length: 5 }).map((_, index) => (
-        <li key={index} className={`${tableGrid} px-3 py-2 min-h-16.25 border-b border-white/3.5 last:border-0`}>
-          <div className="flex items-center gap-3">
-            <div className="h-7.5 w-7.5 rounded-full bg-white/5 animate-pulse" />
-            <div className="flex flex-col gap-1">
-              <div className="h-6 w-25 rounded bg-white/5 animate-pulse" />
-              <div className="h-4 w-12 rounded bg-white/5 animate-pulse" />
+        <tr key={index} className="border-b border-outline last:border-0">
+          <td className="h-16.25 px-3 py-2">
+            <div className="flex items-center gap-3">
+              <div className="h-7.5 w-7.5 animate-pulse rounded-full bg-surface-raised" />
+              <div className="flex flex-col gap-1">
+                <div className="h-6 w-25 animate-pulse rounded bg-surface-raised" />
+                <div className="h-4 w-12 animate-pulse rounded bg-surface-raised" />
+              </div>
             </div>
-          </div>
-          <div className="h-6 w-20 ml-auto rounded bg-white/5 animate-pulse" />
-          <div className="h-6 w-20 ml-auto rounded bg-white/5 animate-pulse" />
-          <div className="h-6 w-20 ml-auto rounded bg-white/5 animate-pulse" />
-          <div className="h-6 w-20 ml-auto rounded bg-white/5 animate-pulse" />
-          <div className="h-6 w-20 ml-auto rounded bg-white/5 animate-pulse" />
-          <div className="flex items-end flex-col gap-1">
-            <div className="h-6 w-20 rounded bg-white/5 animate-pulse" />
-            <div className="h-4 w-10 rounded bg-white/5 animate-pulse" />
-          </div>
-        </li>
+          </td>
+          {Array.from({ length: 5 }).map((_, cellIndex) => (
+            <td key={cellIndex} className="h-16.25 px-3 py-2">
+              <div className="ml-auto h-6 w-20 animate-pulse rounded bg-surface-raised" />
+            </td>
+          ))}
+          <td className="h-16.25 px-3 py-2">
+            <div className="flex flex-col items-end gap-1">
+              <div className="h-6 w-20 animate-pulse rounded bg-surface-raised" />
+              <div className="h-4 w-10 animate-pulse rounded bg-surface-raised" />
+            </div>
+          </td>
+        </tr>
       ))}
-    </ul>
+    </tbody>
   )
 }
 
-export function PortfolioTable({ assets, sortBy, handleSort, sortDirection, search, onSearchChange, onFilterChange, view, refreshPortfolio, loading, lastUpdated, currency }: PortfolioTableProps) {
+export function PortfolioTable({
+  assets,
+  sortBy,
+  handleSort,
+  sortDirection,
+  search,
+  onSearchChange,
+  onFilterChange,
+  view,
+  refreshPortfolio,
+  loading,
+  lastUpdated,
+  currency,
+}: PortfolioTableProps) {
   return (
-    <>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 px-4 py-2 border border-white/10 backdrop-blur-md bg-white/5 rounded-t-md justify-between">
-        <div className="flex gap-1 ui-surface p-1 bg-black/10! order-1 sm:order-0">
+    <div className="rounded-xl bg-surface">
+      <div className="mt-4 flex flex-col items-start justify-between gap-4 rounded-t-xl border border-outline px-4 py-2 sm:flex-row sm:items-center">
+        <div className="ui-surface order-1 flex gap-1 bg-app p-1 sm:order-0">
           {filterButtons.map(({ label, value }) => (
             <button
               key={value}
               type="button"
               onClick={() => onFilterChange(value)}
-              className={`cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition ${view === value ? 'bg-emerald-400 text-black' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}
-            >
+              className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-medium inset-shadow-[0_0_2px_0_rgb(0_0_0/100%)] transition ${view === value ? 'bg-accent text-on-accent' : 'text-text hover:bg-surface-raised hover:text-text'}`}>
               {label}
             </button>
           ))}
         </div>
-        <div className="flex gap-2 items-center w-full sm:justify-end justify-between">
+        <div className="flex w-full items-center justify-between gap-2 sm:justify-end">
           <PortfolioSearch value={search} onChange={onSearchChange} />
-          <div className="flex gap-2 items-center">
-            <Button type="button" variant="dashboard" aria-label="Export portfolio as CSV" onClick={() => exportAssetsToCsv(assets)}>
-              <Download className="w-5 h-5" />
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="dashboard" aria-label="Export" onClick={() => exportAssetsToCsv(assets)} className="gap-1">
+              <Download className="h-5 w-5" />
+              <span className="text-xs font-medium">Export</span>
             </Button>
-            <Button type="button" variant="dashboard" aria-label="Refresh portfolio" onClick={refreshPortfolio} disabled={loading}>
-              <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin text-white' : ''}`} />
+            <Button type="button" variant="dashboard" aria-label="Refresh portfolio" onClick={refreshPortfolio} disabled={loading} className="gap-1">
+              <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin text-text' : ''}`} />
+              <span className="text-xs font-medium">{loading ? 'Refreshing…' : 'Refresh'}</span>
             </Button>
           </div>
         </div>
       </div>
-      <div className="backdrop-blur-md bg-white/5 overflow-x-auto">
-        <div className="min-w-max">
-          <div className={`${tableGrid} px-3 py-2 text-lg font-medium border border-white/10 bg-black/20 border-t-0`}>
-            {columnButtons.map(({ label, value, className }) => (
-              <button
-                key={value}
-                type="button"
-                onClick={() => handleSort(value)}
-                className={`text-left cursor-pointer flex justify-end gap-1 items-center label transition hover:text-emerald-400! ${className ?? ''}`}
-              >
-                {label}
-                <span className="text-xs flex flex-col gap-1">
-                  <svg
-                    className={`w-1.5 ${sortBy === value && sortDirection === 'asc' ? 'text-emerald-400' : 'text-gray-500'}`}
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="6 8 12 6"
-                    fill="currentColor"
-                  >
-                    <path d="M12 8L18 14H6L12 8Z"></path>
-                  </svg>
-                  <svg
-                    className={`w-1.5 ${sortBy === value && sortDirection === 'desc' ? 'text-emerald-400' : 'text-gray-500'}`}
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="6 10 12 6"
-                    fill="currentColor"
-                  >
-                    <path d="M12 16L6 10H18L12 16Z"></path>
-                  </svg>
-                </span>
-              </button>
+      <div className="overflow-x-auto border-x border-outline">
+        <table className="w-full min-w-225 table-fixed" aria-label={loading ? 'Loading portfolio' : 'Portfolio assets'}>
+          <colgroup>
+            <col className="w-[19.3%]" />
+            {Array.from({ length: 6 }).map((_, index) => (
+              <col key={index} className="w-[13.45%]" />
             ))}
-          </div>
+          </colgroup>
+          <thead className="border-b border-outline bg-surface-raised">
+            <tr>
+              {columnButtons.map(({ label, value, className }) => (
+                <th key={value} scope="col" className="px-3 py-2">
+                  <button
+                    type="button"
+                    onClick={() => handleSort(value)}
+                    className={`label flex w-full cursor-pointer items-center justify-end gap-1 text-left normal-case transition hover:text-accent! ${className ?? ''}`}>
+                    {label}
+                    <span className="flex flex-col gap-1 text-xs">
+                      <svg
+                        className={`w-1.5 ${sortBy === value && sortDirection === 'asc' ? 'text-accent' : 'text-muted'}`}
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="6 8 12 6"
+                        fill="currentColor">
+                        <path d="M12 8L18 14H6L12 8Z"></path>
+                      </svg>
+                      <svg
+                        className={`w-1.5 ${sortBy === value && sortDirection === 'desc' ? 'text-accent' : 'text-muted'}`}
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="6 10 12 6"
+                        fill="currentColor">
+                        <path d="M12 16L6 10H18L12 16Z"></path>
+                      </svg>
+                    </span>
+                  </button>
+                </th>
+              ))}
+            </tr>
+          </thead>
           {loading ? (
             <PortfolioSkeleton />
           ) : assets.length === 0 ? (
-            <div className="px-5 py-6 text-center text-xl">Nothing found</div>
+            <tbody>
+              <tr>
+                <td className="px-5 py-6 text-center text-xl" colSpan={7}>
+                  Nothing found
+                </td>
+              </tr>
+            </tbody>
           ) : (
-            <ul className="border-l border-r border-white/10" aria-label="Portfolio assets">
+            <tbody className="divide-y divide-outline">
               {assets.map((asset) => {
                 return (
-                  <li key={asset.asset} className={`${tableGrid} px-3 py-2 text-right min-h-16.25 border-b border-white/3.5 last:border-0 hover:bg-black/20`}>
-                    <div className="flex items-center gap-3 text-left">
-                      {asset.image && <img src={asset.image} alt={asset.asset} className="w-7.5 h-7.5" />}
-                      <div className="flex flex-col">
-                        <span className="font-medium">{asset.name ?? asset.asset}</span>
-                        <span className="text-xs text-gray-500">{asset.asset}</span>
+                  <tr key={asset.asset} className="transition-colors hover:bg-surface-raised">
+                    <td className="h-16.25 px-3 py-2 text-left">
+                      <div className="flex items-center gap-3">
+                        {asset.image && <img src={asset.image} alt={asset.asset} className="h-7.5 w-7.5" />}
+                        <div className="flex flex-col">
+                          <span className="font-medium">{asset.name ?? asset.asset}</span>
+                          <span className="text-xs text-muted">{asset.asset}</span>
+                        </div>
                       </div>
-                    </div>
-                    <span>{formatPrice(asset.amount)}</span>
-                    <div className="flex justify-end">
-                      <span className={`flex gap-1 items-center px-2 py-1 rounded-md text-xs ${asset.change24hPercent >= 0 ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-400'}`}>
-                        {asset.change24hPercent >= 0 ? <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" /> : <TrendingDown className="h-3.5 w-3.5" aria-hidden="true" />}
-                        {`${formatNumber(Math.abs(asset.change24hPercent))}%`}
-                      </span>
-                    </div>
-                    <span>{formatCurrency(asset.convertedTotal, currency)}</span>
-                    <span>{formatCurrency(asset.convertedPrice, currency)}</span>
-                    <span>{asset.convertedAvgBuy === null ? '—' : formatCurrency(asset.convertedAvgBuy, currency)}</span>
-                    <span className={`flex flex-col ${asset.convertedPnl === null ? '' : asset.convertedPnl >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    </td>
+                    <td className="h-16.25 px-3 py-2 text-right">{formatPrice(asset.amount)}</td>
+                    <td className="h-16.25 px-3 py-2 text-right">
+                      <div className="flex justify-end">
+                        <span
+                          className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs ${asset.change24hPercent >= 0 ? 'bg-profit-subtle text-profit' : 'bg-loss-subtle text-loss'}`}>
+                          {asset.change24hPercent >= 0 ? (
+                            <TrendingUp className="h-3.5 w-3.5" aria-hidden="true" />
+                          ) : (
+                            <TrendingDown className="h-3.5 w-3.5" aria-hidden="true" />
+                          )}
+                          {`${formatNumber(Math.abs(asset.change24hPercent))}%`}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="h-16.25 px-3 py-2 text-right">{formatCurrency(asset.convertedTotal, currency)}</td>
+                    <td className="h-16.25 px-3 py-2 text-right">{formatCurrency(asset.convertedPrice, currency)}</td>
+                    <td className="h-16.25 px-3 py-2 text-right">
+                      {asset.convertedAvgBuy === null ? '—' : formatCurrency(asset.convertedAvgBuy, currency)}
+                    </td>
+                    <td
+                      className={`h-16.25 px-3 py-2 text-right ${asset.convertedPnl === null ? '' : asset.convertedPnl >= 0 ? 'text-profit' : 'text-loss'}`}>
                       {asset.convertedPnl === null ? (
                         '—'
                       ) : (
-                        <>
+                        <div className="flex flex-col">
                           <span>{formatSignedCurrency(asset.convertedPnl, currency)}</span>
-                          <span className="text-xs">{asset.convertedPnlPercent === null ? '—' : formatSignedValue(asset.convertedPnlPercent, '', '%')}</span>
-                        </>
+                          <span className="text-xs">
+                            {asset.convertedPnlPercent === null ? '—' : formatSignedValue(asset.convertedPnlPercent, '', '%')}
+                          </span>
+                        </div>
                       )}
-                    </span>
-                  </li>
+                    </td>
+                  </tr>
                 )
               })}
-            </ul>
+            </tbody>
           )}
-        </div>
+        </table>
       </div>
-      <div className="px-3 py-2 w-full rounded-b-md bg-black/20 backdrop-blur-md border border-white/10 text-gray-500 text-xs text-right">
-        Last updated: <span className="text-gray-400">{lastUpdated ? lastUpdated.toLocaleTimeString() : '—'}</span>
+      <div className="w-full rounded-b-xl border border-outline px-3 py-2 text-right text-xs text-muted">
+        Last updated: <span className="text-muted">{lastUpdated ? lastUpdated.toLocaleTimeString() : '—'}</span>
       </div>
-    </>
+    </div>
   )
 }

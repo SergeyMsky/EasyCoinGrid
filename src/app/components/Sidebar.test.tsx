@@ -14,5 +14,6 @@ describe('Sidebar', () => {
     expect(screen.getByRole('navigation', { name: 'Main navigation' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute('href', '/dashboard')
     expect(screen.getByRole('link', { name: 'Spot rotations' })).toHaveAttribute('aria-current', 'page')
+    expect(screen.getByRole('navigation', { name: 'Legal navigation' })).toContainElement(screen.getByRole('link', { name: 'Privacy policy' }))
   })
 })

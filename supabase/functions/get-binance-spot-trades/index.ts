@@ -124,7 +124,10 @@ Deno.serve(async (request: Request) => {
     }
 
     const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: authorization } } })
-    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser()
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseAuth.auth.getUser()
     if (userError || !user) return json({ error: 'Unauthorized.' }, 401)
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
@@ -149,13 +152,14 @@ Deno.serve(async (request: Request) => {
 
     const assetSet = new Set(assets)
     const symbolAssetsBySymbol = new Map<string, { baseAsset: string; quoteAsset: string; symbol: string }>()
-    for (const item of exchangeData.symbols as Array<{ status: string; isSpotTradingAllowed: boolean; baseAsset: string; quoteAsset: string; symbol: string }>) {
-      if (
-        item.status === 'TRADING'
-        && item.isSpotTradingAllowed
-        && assetSet.has(item.baseAsset)
-        && supportedQuoteAssets.has(item.quoteAsset)
-      ) {
+    for (const item of exchangeData.symbols as Array<{
+      status: string
+      isSpotTradingAllowed: boolean
+      baseAsset: string
+      quoteAsset: string
+      symbol: string
+    }>) {
+      if (item.status === 'TRADING' && item.isSpotTradingAllowed && assetSet.has(item.baseAsset) && supportedQuoteAssets.has(item.quoteAsset)) {
         symbolAssetsBySymbol.set(item.symbol, { baseAsset: item.baseAsset, quoteAsset: item.quoteAsset, symbol: item.symbol })
       }
     }
@@ -165,10 +169,10 @@ Deno.serve(async (request: Request) => {
         symbolAssetsBySymbol.set(symbol, { baseAsset: symbol.slice(0, -quoteAsset.length), quoteAsset, symbol })
       }
     }
-    const symbolAssets = [...symbolAssetsBySymbol.values()]
-      .sort((a: { baseAsset: string; quoteAsset: string }, b: { baseAsset: string; quoteAsset: string }) =>
+    const symbolAssets = [...symbolAssetsBySymbol.values()].sort(
+      (a: { baseAsset: string; quoteAsset: string }, b: { baseAsset: string; quoteAsset: string }) =>
         a.baseAsset.localeCompare(b.baseAsset) || a.quoteAsset.localeCompare(b.quoteAsset),
-      )
+    )
     if (symbolAssets.length > 100) {
       throw new Error(`Found ${symbolAssets.length} eligible trading pairs; automatic sync is limited to 100 pairs per run.`)
     }
@@ -190,7 +194,7 @@ Deno.serve(async (request: Request) => {
 
       while (true) {
         const params = new URLSearchParams({ symbol, fromId: fromId.toString(), limit: '1000' })
-        const page = await signedBinanceGet('/api/v3/myTrades', params, apiKey, apiSecret) as RawBinanceTrade[]
+        const page = (await signedBinanceGet('/api/v3/myTrades', params, apiKey, apiSecret)) as RawBinanceTrade[]
 
         if (!Array.isArray(page)) throw new Error(`Binance returned invalid trade history for ${symbol}.`)
         rawTrades.push(...page)
@@ -218,7 +222,7 @@ Deno.serve(async (request: Request) => {
         } else if (trade.commissionAsset === symbol.slice(0, -quoteAsset.length)) {
           commissionUsd = commission * priceUsd
         } else {
-          commissionUsd = commission * await getAssetUsdPrice(trade.commissionAsset)
+          commissionUsd = commission * (await getAssetUsdPrice(trade.commissionAsset))
         }
 
         trades.push({ ...trade, baseAsset, priceUsd, commissionUsd })

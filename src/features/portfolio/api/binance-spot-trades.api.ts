@@ -43,12 +43,7 @@ export async function syncBinanceSpotRotations(assets: string[], knownSymbols: s
 
       try {
         const responseData: unknown = JSON.parse(responseBody)
-        if (
-          typeof responseData === 'object'
-          && responseData !== null
-          && 'error' in responseData
-          && typeof responseData.error === 'string'
-        ) {
+        if (typeof responseData === 'object' && responseData !== null && 'error' in responseData && typeof responseData.error === 'string') {
           detail = responseData.error
         }
       } catch {
@@ -61,12 +56,12 @@ export async function syncBinanceSpotRotations(assets: string[], knownSymbols: s
     throw new Error(`Unable to load Binance spot trades: ${error.message}`)
   }
   if (
-    !data
-    || !Array.isArray(data.symbols)
-    || !Array.isArray(data.trades)
-    || typeof data.syncedAt !== 'string'
-    || !(data.oldestTradeTime === null || Number.isFinite(data.oldestTradeTime))
-    || !(data.newestTradeTime === null || Number.isFinite(data.newestTradeTime))
+    !data ||
+    !Array.isArray(data.symbols) ||
+    !Array.isArray(data.trades) ||
+    typeof data.syncedAt !== 'string' ||
+    !(data.oldestTradeTime === null || Number.isFinite(data.oldestTradeTime)) ||
+    !(data.newestTradeTime === null || Number.isFinite(data.newestTradeTime))
   ) {
     throw new Error('Invalid Binance spot trades response.')
   }

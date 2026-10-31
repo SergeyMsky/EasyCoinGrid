@@ -38,9 +38,9 @@ export function AuthCallbackPage() {
   if (error) {
     return (
       <main className="flex min-h-[calc(100vh-67px)] items-center justify-center px-4 py-10">
-        <div className="w-full max-w-lg ui-surface p-6 shadow-xl shadow-black/50 sm:p-8 text-center">
+        <div className="ui-surface w-full max-w-lg p-6 text-center sm:p-8">
           <h1 className="text-2xl font-semibold">Confirmation failed</h1>
-          <p className="mt-2 text-red-400">{error}</p>
+          <p className="mt-2 text-error">{error}</p>
         </div>
       </main>
     )

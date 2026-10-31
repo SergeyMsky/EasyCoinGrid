@@ -64,7 +64,10 @@ Deno.serve(async (request: Request) => {
     }
 
     const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, { global: { headers: { Authorization: authorization } } })
-    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser()
+    const {
+      data: { user },
+      error: userError,
+    } = await supabaseAuth.auth.getUser()
     if (userError || !user) return json({ error: 'Unauthorized.' }, 401)
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
@@ -156,9 +159,7 @@ Deno.serve(async (request: Request) => {
       }
     })
 
-    const { error: saveError } = await supabaseAdmin
-      .from('spot_portfolio_snapshots')
-      .upsert(rows, { onConflict: 'user_id,source_snapshot_id' })
+    const { error: saveError } = await supabaseAdmin.from('spot_portfolio_snapshots').upsert(rows, { onConflict: 'user_id,source_snapshot_id' })
     if (saveError) throw saveError
 
     return json({

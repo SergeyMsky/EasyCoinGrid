@@ -31,17 +31,22 @@ describe('spot rotation modals', () => {
   it('shows execution dates and trade/order IDs in closed rotation history', () => {
     render(
       <ClosedRotationsTable
-        rotations={[{
-          ...rotation,
-          status: 'CLOSED',
-          sell_order_id: 'sell-1',
-          sell_trade_id: 'sell-trade-1',
-          sell_time: '2026-10-29T13:00:00.000Z',
-          sell_price: 110,
-          sold_qty: 2,
-          realized_pnl_usd: 18,
-          realized_pnl_percent: 9,
-        }]}
+        rotations={[
+          {
+            ...rotation,
+            status: 'CLOSED',
+            sell_order_id: 'sell-1',
+            sell_trade_id: 'sell-trade-1',
+            sell_time: '2026-10-29T13:00:00.000Z',
+            sell_price: 110,
+            sold_qty: 2,
+            realized_pnl_usd: 18,
+            realized_pnl_percent: 9,
+          },
+        ]}
+        assetMetadata={{}}
+        currency="USD"
+        currencyRate={1}
       />,
     )
 
@@ -50,6 +55,7 @@ describe('spot rotation modals', () => {
     expect(screen.getByText('Sell trade ID: sell-trade-1')).toBeInTheDocument()
     expect(screen.getByText('Sell order ID: sell-1')).toBeInTheDocument()
     expect(screen.getAllByText(/2026/)).toHaveLength(2)
+    expect(screen.getAllByText(/29 Oct 2026/)).toHaveLength(2)
   })
 
   it('records a full close with the calculated net realized PnL', async () => {

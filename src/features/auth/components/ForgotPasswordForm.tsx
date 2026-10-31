@@ -32,13 +32,20 @@ export function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex w-max-sm m-auto flex-col">
+    <form onSubmit={handleSubmit} className="w-max-sm m-auto flex flex-col">
       <label className="flex flex-col gap-2">
         <span className="label">Email</span>
-        <input className="input h-13 py-2 px-4" type="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="user@example.com" required />
+        <input
+          className="input h-13 px-4 py-2"
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder="user@example.com"
+          required
+        />
       </label>
       <div className="mt-2 flex justify-end">
-        <button type="button" onClick={onBack} className="text-emerald-400 hover:text-white transition cursor-pointer">
+        <button type="button" onClick={onBack} className="cursor-pointer text-accent transition hover:text-text">
           Back to login
         </button>
       </div>

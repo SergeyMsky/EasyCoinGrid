@@ -1,7 +1,8 @@
 import type { Currency } from '@/features/portfolio/portfolio.types'
+import { APP_LOCALE } from './locale'
 
 export function formatCurrency(value: number, currency: Currency): string {
-  return new Intl.NumberFormat('uk-UA', {
+  return new Intl.NumberFormat(APP_LOCALE, {
     style: 'currency',
     currency,
     currencyDisplay: 'narrowSymbol',

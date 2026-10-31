@@ -6,7 +6,7 @@ export function SuccessMessage({ message }: SuccessMessageProps) {
   if (!message) return null
 
   return (
-    <p role="status" className="w-full mt-4 rounded-md border border-green-500/20 bg-green-500/10 px-3 py-2 text-sm text-green-400 backdrop-blur-md">
+    <p role="status" className="mt-4 w-full rounded-lg border border-profit-outline bg-profit-subtle px-3 py-2 text-sm text-success">
       {message}
     </p>
   )

@@ -11,12 +11,7 @@ export async function syncBinanceSpotPortfolioHistory(): Promise<void> {
 
       try {
         const responseData: unknown = JSON.parse(responseBody)
-        if (
-          typeof responseData === 'object'
-          && responseData !== null
-          && 'error' in responseData
-          && typeof responseData.error === 'string'
-        ) {
+        if (typeof responseData === 'object' && responseData !== null && 'error' in responseData && typeof responseData.error === 'string') {
           detail = responseData.error
         }
       } catch {
@@ -51,13 +46,16 @@ export async function recordSpotPortfolioSnapshot(totalValueUsd: number): Promis
   }
 
   const observedAt = new Date()
-  const { error } = await supabase.from('spot_portfolio_snapshots').upsert({
-    user_id: user.id,
-    snapshot_at: observedAt.toISOString(),
-    total_value_usd: totalValueUsd,
-    source: 'APP_OBSERVED',
-    source_snapshot_id: `app:${observedAt.toISOString().slice(0, 13)}`,
-  }, { onConflict: 'user_id,source_snapshot_id' })
+  const { error } = await supabase.from('spot_portfolio_snapshots').upsert(
+    {
+      user_id: user.id,
+      snapshot_at: observedAt.toISOString(),
+      total_value_usd: totalValueUsd,
+      source: 'APP_OBSERVED',
+      source_snapshot_id: `app:${observedAt.toISOString().slice(0, 13)}`,
+    },
+    { onConflict: 'user_id,source_snapshot_id' },
+  )
 
   if (error) {
     throw new Error(`Unable to save portfolio snapshot: ${error.message}`)
@@ -79,7 +77,7 @@ export async function getSpotPortfolioHistory(): Promise<SpotPortfolioSnapshot[]
       throw new Error(`Unable to load portfolio history: ${error.message}`)
     }
 
-    snapshots.push(...data as SpotPortfolioSnapshot[])
+    snapshots.push(...(data as SpotPortfolioSnapshot[]))
     if (data.length < pageSize || offset >= 49_000) break
   }
 

@@ -20,6 +20,7 @@ EasyCoinGrid is a React application for viewing a Binance Spot portfolio. It dis
 - Asset search, performance filters, sortable columns, and CSV export.
 - Currency selection and exchange-rate conversion.
 - Avatar upload and display.
+- A public privacy policy describing account, exchange, and portfolio data handling.
 - Loading, empty, Binance-not-connected, and error states.
 - Optional mock portfolio data for development.
 
@@ -69,7 +70,7 @@ The avatar Storage bucket is configured as **public**. Storage policies restrict
 
 ## Binance Integration
 
-Supabase Edge Functions connect to Binance and retrieve Spot account balances. The portfolio flow fetches balances, then requests prices, 24-hour changes, average buy prices, and coin metadata. Portfolio calculations convert values to the selected currency and derive totals and P/L.
+Supabase Edge Functions connect to Binance and retrieve Spot account balances. The portfolio flow fetches balances, then requests prices, 24-hour changes, average buy prices, and coin metadata. Portfolio calculations convert values to the selected currency and derive totals and P/L. Current USDT/USD and USDC/USD rates are calculated using Kraken bid-ask midpoints. Current Binance prices quoted in USDT are converted to USD using the USDT/USD rate. Average buy prices, historical portfolio snapshots, and imported rotation P/L still assume 1 USDT = 1 USD; they are estimates and are not recalculated with historical exchange rates.
 
 The Binance account request uses `/api/v3/account`; the portfolio flow does not perform trading operations. Use Binance credentials with only the permissions needed for account-data access.
 
@@ -95,16 +96,16 @@ The E2E suite covers authentication and dashboard behavior, including asset sear
 
 ## CI
 
-GitHub Actions runs the Playwright end-to-end suite on pushes and pull requests targeting `main` or `master`. The workflow installs dependencies and Playwright browsers, runs the tests, and uploads the Playwright report.
+GitHub Actions runs lint, the production build, and unit/component tests on pushes and pull requests targeting `main` or `master`. Playwright end-to-end tests run when the Supabase project and test-account configuration is available.
 
-The workflow requires the following GitHub Actions configuration:
+To enable Playwright end-to-end tests in GitHub Actions, configure:
 
 - `E2E_EMAIL` and `E2E_PASSWORD` secrets for an existing, confirmed Supabase test account.
 - `VITE_SUPABASE_ANON_KEY` secret and `VITE_SUPABASE_URL` variable for the Supabase project.
 
-The Playwright web server enables the mock portfolio, so dashboard tests use deterministic portfolio data instead of Binance. Authentication still uses the configured Supabase project.
+The Playwright web server enables the mock portfolio, so dashboard tests use deterministic portfolio data instead of Binance. Authentication still uses the configured Supabase project. Public privacy policy coverage is also included in the E2E suite.
 
-GitHub does not provide repository secrets to workflows triggered by pull requests from forks. Authentication-dependent E2E tests therefore require a trusted repository context.
+When those E2E settings are unavailable (for example, on fork pull requests), the workflow still runs lint, build, and unit/component tests and clearly reports that E2E was skipped.
 
 ## Getting Started
 

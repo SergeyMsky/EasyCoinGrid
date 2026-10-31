@@ -16,6 +16,7 @@ import { useAuth } from '@/features/auth/hooks/useAuth'
 import { AuthCallbackPage } from '@/features/auth/pages/AuthCallbackPage'
 import { EmailConfirmedPage } from '@/features/auth/pages/EmailConfirmedPage'
 import { getAvatarUrl } from '@/services/avatar'
+import { PrivacyPage } from '@/pages/PrivacyPage'
 
 function getStoredCurrency(): Currency {
   const storedCurrency = localStorage.getItem('currency')
@@ -32,15 +33,7 @@ function PublicRoute({ session, children }: { session: Session | null; children:
   return <>{children}</>
 }
 
-function AppLayout({
-  children,
-  navigationOpen,
-  onNavigate,
-}: {
-  children: ReactNode
-  navigationOpen: boolean
-  onNavigate: () => void
-}) {
+function AppLayout({ children, navigationOpen, onNavigate }: { children: ReactNode; navigationOpen: boolean; onNavigate: () => void }) {
   return (
     <div className="flex min-h-[calc(100vh-61px)]">
       <Sidebar mobileOpen={navigationOpen} onNavigate={onNavigate} />
@@ -91,7 +84,7 @@ function App() {
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center p-5">
-        <Spinner className="size-10 border-6 border-white/10 border-t-emerald-400 " />
+        <Spinner className="size-10 border-6 border-outline border-t-accent" />
       </div>
     )
   }
@@ -122,6 +115,7 @@ function App() {
         <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/auth/confirm" element={<EmailConfirmedPage />} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route
           path="/dashboard"
           element={
@@ -137,7 +131,7 @@ function App() {
           element={
             <ProtectedRoute session={session}>
               <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
-                <RotationsPage />
+                <RotationsPage currency={currency} />
               </AppLayout>
             </ProtectedRoute>
           }

@@ -3,6 +3,8 @@ import { test, expect } from '@playwright/test'
 const email = process.env.E2E_EMAIL
 const password = process.env.E2E_PASSWORD
 
+test.skip(!email || !password, 'Set E2E_EMAIL and E2E_PASSWORD to run authenticated tests')
+
 test.skip('user can register', async ({ page }) => {
   await page.goto('/auth?mode=register')
 
@@ -30,7 +32,7 @@ test.describe('authenticated', () => {
     await page.getByLabel('Password').fill(password!)
     await page.getByRole('button', { name: 'Sign in' }).click()
     await expect(page).toHaveURL('/dashboard')
-    await expect(page.getByText('Binance Spot Wallet Balance')).toBeVisible()
+    await expect(page.getByRole('table', { name: 'Portfolio assets' })).toBeVisible()
   })
 
   test('authenticated user cannot access auth page', async ({ page }) => {

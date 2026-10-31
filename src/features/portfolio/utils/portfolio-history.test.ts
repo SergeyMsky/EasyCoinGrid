@@ -21,10 +21,12 @@ describe('portfolio history calculations', () => {
   })
 
   it('calculates absolute and percentage value change without describing it as realized profit', () => {
-    expect(getPortfolioHistoryChange([
-      { timestamp: now - 1000, valueUsd: 200, source: 'BINANCE_DAILY' },
-      { timestamp: now, valueUsd: 220, source: 'APP_OBSERVED' },
-    ])).toEqual({ changeUsd: 20, changePercent: 10 })
+    expect(
+      getPortfolioHistoryChange([
+        { timestamp: now - 1000, valueUsd: 200, source: 'BINANCE_DAILY' },
+        { timestamp: now, valueUsd: 220, source: 'APP_OBSERVED' },
+      ]),
+    ).toEqual({ changeUsd: 20, changePercent: 10 })
   })
 
   it('does not calculate change for a single data point', () => {

@@ -38,6 +38,7 @@ describe('SpotPortfolioPerformance', () => {
         enabled
         assets={[asset('USDT', 800), asset('SOL', 200)]}
         currency="USD"
+        currencyRate={1}
       />,
     )
 
@@ -51,15 +52,39 @@ describe('SpotPortfolioPerformance', () => {
     const chartSvg = chart.querySelector('svg')
     expect(chartSvg).not.toBeNull()
     fireEvent.mouseMove(chartSvg!, { clientX: 400, clientY: 100 })
-    expect(await screen.findByRole('tooltip')).toHaveTextContent(/1\s?000,00|1\s?100,00/)
-    expect(screen.getByText('value change for selected period').parentElement).toHaveTextContent(/\+100/)
+    expect(await screen.findByRole('tooltip')).toHaveTextContent(/\$1,000\.00|\$1,100\.00/)
+    expect(screen.getByText('value change for selected period').parentElement).toHaveTextContent(/\+\$100\.00/)
     expect(screen.getByText(/not cash-flow-adjusted profit/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '1M' })).toHaveAttribute('aria-pressed', 'true')
   })
 
   it('explains why the chart is unavailable without a connected exchange', () => {
-    render(<SpotPortfolioPerformance snapshots={[]} loading={false} error={null} enabled={false} assets={[]} currency="USD" />)
+    render(<SpotPortfolioPerformance snapshots={[]} loading={false} error={null} enabled={false} assets={[]} currency="USD" currencyRate={1} />)
 
     expect(screen.getByText('Connect a real Binance account to load Spot portfolio history.')).toBeInTheDocument()
+  })
+
+  it('converts the chart value and selected-period change to the selected currency', () => {
+    const now = Date.now()
+    const snapshots: SpotPortfolioSnapshot[] = [
+      { id: 'one', snapshot_at: new Date(now - 60_000).toISOString(), total_value_usd: 1000, source: 'BINANCE_DAILY' },
+      { id: 'two', snapshot_at: new Date(now).toISOString(), total_value_usd: 1100, source: 'APP_OBSERVED' },
+    ]
+
+    render(
+      <SpotPortfolioPerformance
+        snapshots={snapshots}
+        loading={false}
+        error={null}
+        enabled
+        assets={[asset('USDT', 800), asset('SOL', 200)]}
+        currency="EUR"
+        currencyRate={0.92}
+      />,
+    )
+
+    expect(screen.getByText('Spot portfolio value').nextElementSibling).toHaveTextContent(/€1,012\.00/)
+    expect(screen.getByText('value change for selected period').parentElement).toHaveTextContent(/\+€92\.00/)
+    expect(screen.getByRole('img', { name: /Spot portfolio value history, 2 data points/ })).toBeInTheDocument()
   })
 })

@@ -1,7 +1,4 @@
-export function formatNumber(
-  value: number | string | null | undefined,
-  maximumFractionDigits = 2,
-): string {
+export function formatNumber(value: number | string | null | undefined, maximumFractionDigits = 2): string {
   const number = Number(value)
 
   if (!Number.isFinite(number)) {

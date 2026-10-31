@@ -16,7 +16,11 @@ const periodMilliseconds: Record<Exclude<PortfolioHistoryPeriod, 'ALL'>, number>
   '1Y': 365 * 24 * 60 * 60 * 1000,
 }
 
-export function getPortfolioHistoryPoints(snapshots: SpotPortfolioSnapshot[], period: PortfolioHistoryPeriod, now = Date.now()): PortfolioHistoryPoint[] {
+export function getPortfolioHistoryPoints(
+  snapshots: SpotPortfolioSnapshot[],
+  period: PortfolioHistoryPeriod,
+  now = Date.now(),
+): PortfolioHistoryPoint[] {
   const cutoff = period === 'ALL' ? Number.NEGATIVE_INFINITY : now - periodMilliseconds[period]
   const deduplicated = new Map<number, PortfolioHistoryPoint>()
 

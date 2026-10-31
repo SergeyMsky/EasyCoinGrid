@@ -1,51 +1,96 @@
-@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,100..700;1,100..700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
 @import 'tailwindcss';
 
-@theme {
-  --font-ibm-sans: 'IBM Plex Sans', sans-serif;
+:root {
+  --color-chart-1: var(--color-accent);
+  --color-chart-2: #0891b2;
+  --color-chart-3: #8b5cf6;
+  --color-chart-4: #f59e0b;
+  --color-chart-5: #db2777;
+  --color-chart-6: #ea580c;
+  --color-chart-7: #10b981;
+  --color-chart-8: #6366f1;
 }
 
-html {
-  @apply scrollbar-thumb-white/20;
+@theme inline {
+  --font-space-grotesk: 'Space Grotesk', sans-serif;
+
+  --color-text: #e5e5e5;
+  --color-app: #111111;
+  --color-surface: #141414;
+  --color-surface-raised: #1b1b1b;
+  --color-outline: #222222;
+  --color-muted: #8a8a8a;
+  --color-subtle: #525252;
+
+  --color-accent: #d97757;
+  --color-accent-strong: #e88765;
+  --color-on-accent: #171717;
+  --color-accent-subtle: #30231f;
+  --color-accent-outline: #684337;
+  --color-accent-disabled: #80685f;
+  --color-overlay: #0a0a0a;
+
+  --color-profit: #10b981;
+  --color-profit-subtle: #102a22;
+  --color-profit-outline: #245c49;
+
+  --color-loss: #f43f5e;
+  --color-loss-subtle: #30171e;
+  --color-loss-outline: #6b2938;
+
+  --color-warning: #d97706;
+  --color-warning-subtle: #302313;
+  --color-warning-outline: #6b4b20;
+
+  --color-success: #047857;
+  --color-error: #be123c;
 }
 
-body {
-  position: relative;
-  min-height: 100vh;
-  min-width: 320px;
-  overflow-x: hidden;
-  color: var(--color-white);
-  font-family: var(--font-ibm-sans);
-  background: var(--color-black);
-  background: radial-gradient(circle at 10% 10%, #12352d 0, #0b1717 16rem, transparent 32rem), radial-gradient(circle at 90% 90%, #102a32 0, #0a151b 16rem, transparent 32rem), #080c0f;
-}
-body::before {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  content: '';
-  background-image: linear-gradient(#ffffff04 1px, transparent 1px), linear-gradient(90deg, #ffffff04 1px, transparent 1px);
-  background-size: 42px 42px;
-  mask-image: linear-gradient(to bottom, black, transparent 75%);
+@layer base {
+  html {
+    @apply scrollbar-thumb-outline scrollbar-track-surface;
+  }
+
+  body {
+    @apply relative min-h-screen min-w-[320px] overflow-x-hidden bg-app font-space-grotesk text-text;
+  }
+
+  ::selection {
+    @apply bg-accent text-text;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-accent;
+  }
 }
 
-.label {
-  @apply text-xs text-gray-500 tracking-wider uppercase font-medium;
-}
+@layer components {
+  .label {
+    @apply text-xs font-medium tracking-wider text-muted uppercase;
+  }
 
-.ui-surface {
-  @apply bg-white/5 border border-white/10 rounded-md backdrop-blur-md;
-}
+  .ui-surface {
+    @apply rounded-lg border border-outline bg-surface;
+  }
 
-.input {
-  @apply w-full 
-	border rounded-md border-white/10 outline-none 
-bg-black/10 text-white
-	backdrop-blur-md
-	transition 
-	duration-200
-	placeholder:text-gray-500
-	focus:border-emerald-400 hover:border-white/20 hover:bg-white/5
-  disabled:cursor-not-allowed disabled:bg-black/10! disabled:border-white/10!;
+  .input {
+    @apply w-full rounded-lg border border-outline bg-app text-text transition duration-300 ease-in-out outline-none;
+  }
+
+  .input::placeholder {
+    @apply text-muted;
+  }
+
+  .input:hover {
+    @apply border-muted;
+  }
+
+  .input:focus {
+    @apply border-accent;
+  }
+
+  .input:disabled {
+    @apply cursor-not-allowed border-outline bg-surface-raised text-muted;
+  }
 }

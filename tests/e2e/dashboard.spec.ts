@@ -3,6 +3,8 @@ import { expect, test } from '@playwright/test'
 const email = process.env.E2E_EMAIL
 const password = process.env.E2E_PASSWORD
 
+test.skip(!email || !password, 'Set E2E_EMAIL and E2E_PASSWORD to run authenticated dashboard tests')
+
 test.describe('Dashboard', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/auth?mode=login')
@@ -10,7 +12,7 @@ test.describe('Dashboard', () => {
     await page.getByLabel('Password').fill(password!)
     await page.getByRole('button', { name: 'Sign in' }).click()
     await expect(page).toHaveURL('/dashboard')
-    await expect(page.getByText('Binance Spot Wallet Balance')).toBeVisible()
+    await expect(page.getByRole('table', { name: 'Portfolio assets' })).toBeVisible()
   })
 
   test('filters assets by search', async ({ page }) => {
@@ -28,14 +30,14 @@ test.describe('Dashboard', () => {
   test('shows empty state when no assets match search', async ({ page }) => {
     await page.getByPlaceholder('Search in Your Assets').fill('nullcoin')
 
-    const rows = page.getByRole('list', { name: 'Portfolio assets' }).getByRole('listitem')
+    const rows = page.getByRole('table', { name: 'Portfolio assets' }).locator('tbody tr')
 
-    await expect(rows).toHaveCount(0)
+    await expect(rows).toHaveCount(1)
     await expect(page.getByText('Nothing found')).toBeVisible()
   })
 
   test('sorts assets by total', async ({ page }) => {
-    const rows = page.getByRole('list', { name: 'Portfolio assets' }).getByRole('listitem')
+    const rows = page.getByRole('table', { name: 'Portfolio assets' }).locator('tbody tr')
 
     await expect(rows.nth(0)).toContainText('Bitcoin')
     await expect(rows.nth(1)).toContainText('Ethereum')
@@ -49,7 +51,7 @@ test.describe('Dashboard', () => {
   })
 
   test('filters assets by performance', async ({ page }) => {
-    const rows = page.getByRole('list', { name: 'Portfolio assets' }).getByRole('listitem')
+    const rows = page.getByRole('table', { name: 'Portfolio assets' }).locator('tbody tr')
 
     await page.getByRole('button', { name: 'Gainers' }).click()
     await expect(rows).toHaveCount(2)
