@@ -88,7 +88,118 @@ type UsdBinanceTrade = RawBinanceTrade & {
   commissionUsd: number
 }
 
+type RotationRow = {
+  symbol: string
+  buy_order_id: string
+  buy_trade_id: string
+  buy_time: string
+  buy_price: number
+  buy_qty: number
+  status: 'OPEN' | 'CLOSED'
+  sell_order_id: string | null
+  sell_trade_id: string | null
+  sell_time: string | null
+  sell_price: number | null
+  sold_qty: number
+  fee_amount: number
+  realized_pnl_usd: number | null
+  realized_pnl_percent: number | null
+}
+
+type OpenLot = {
+  trade: UsdBinanceTrade
+  remainingQty: number
+  remainingFeeUsd: number
+}
+
 const supportedQuoteAssets = new Set(['USDT', 'USDC', 'FDUSD', 'TUSD', 'USDP', 'DAI'])
+
+function buildRotationRows(trades: UsdBinanceTrade[]) {
+  const orderedTrades = [...trades].sort((a, b) => a.time - b.time || a.id - b.id)
+  const lotsByAsset = new Map<string, OpenLot[]>()
+  const rotations: RotationRow[] = []
+  let unmatchedSellTrades = 0
+
+  for (const trade of orderedTrades) {
+    const quantity = Number(trade.qty)
+    const priceUsd = trade.priceUsd
+    const feeUsd = trade.commissionUsd
+
+    if (![quantity, priceUsd, feeUsd].every(Number.isFinite) || quantity <= 0 || priceUsd <= 0 || feeUsd < 0) {
+      throw new Error(`Binance trade ${trade.id} contains invalid price, quantity, or fee data.`)
+    }
+
+    const lots = lotsByAsset.get(trade.baseAsset) ?? []
+
+    if (trade.isBuyer) {
+      lots.push({ trade, remainingQty: quantity, remainingFeeUsd: feeUsd })
+      lotsByAsset.set(trade.baseAsset, lots)
+      continue
+    }
+
+    let remainingToSell = quantity
+
+    while (remainingToSell > 0 && lots.length > 0) {
+      const lot = lots[0]
+      const matchedQty = Math.min(remainingToSell, lot.remainingQty)
+      const buyFeeUsd = lot.remainingFeeUsd * (matchedQty / lot.remainingQty)
+      const sellFeeUsd = feeUsd * (matchedQty / quantity)
+      const totalFeeUsd = buyFeeUsd + sellFeeUsd
+      const realizedPnlUsd = (priceUsd - lot.trade.priceUsd) * matchedQty - totalFeeUsd
+      const costBasisUsd = lot.trade.priceUsd * matchedQty
+
+      rotations.push({
+        symbol: lot.trade.symbol,
+        buy_order_id: String(lot.trade.orderId),
+        buy_trade_id: String(lot.trade.id),
+        buy_time: new Date(lot.trade.time).toISOString(),
+        buy_price: lot.trade.priceUsd,
+        buy_qty: matchedQty,
+        status: 'CLOSED',
+        sell_order_id: String(trade.orderId),
+        sell_trade_id: String(trade.id),
+        sell_time: new Date(trade.time).toISOString(),
+        sell_price: priceUsd,
+        sold_qty: matchedQty,
+        fee_amount: totalFeeUsd,
+        realized_pnl_usd: realizedPnlUsd,
+        realized_pnl_percent: (realizedPnlUsd / costBasisUsd) * 100,
+      })
+
+      lot.remainingQty -= matchedQty
+      lot.remainingFeeUsd -= buyFeeUsd
+      remainingToSell -= matchedQty
+
+      if (lot.remainingQty <= Number.EPSILON) lots.shift()
+    }
+
+    if (remainingToSell > Number.EPSILON) unmatchedSellTrades += 1
+  }
+
+  for (const lots of lotsByAsset.values()) {
+    for (const lot of lots) {
+      rotations.push({
+        symbol: lot.trade.symbol,
+        buy_order_id: String(lot.trade.orderId),
+        buy_trade_id: String(lot.trade.id),
+        buy_time: new Date(lot.trade.time).toISOString(),
+        buy_price: lot.trade.priceUsd,
+        buy_qty: lot.remainingQty,
+        status: 'OPEN',
+        sell_order_id: null,
+        sell_trade_id: null,
+        sell_time: null,
+        sell_price: null,
+        sold_qty: 0,
+        fee_amount: lot.remainingFeeUsd,
+        realized_pnl_usd: null,
+        realized_pnl_percent: null,
+      })
+    }
+  }
+
+  return { rotations, unmatchedSellTrades }
+}
 
 Deno.serve(async (request: Request) => {
   if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: responseHeaders })
@@ -102,17 +213,9 @@ Deno.serve(async (request: Request) => {
     if (!Array.isArray(body?.assets) || body.assets.length > 100) {
       return json({ error: 'Provide up to 100 portfolio assets.' }, 400)
     }
-    if (body.knownSymbols !== undefined && (!Array.isArray(body.knownSymbols) || body.knownSymbols.length > 100)) {
-      return json({ error: 'Provide up to 100 previously imported Binance symbols.' }, 400)
-    }
-
     const assets = [...new Set(body.assets.map((asset: unknown) => String(asset).trim().toUpperCase()))]
-    const knownSymbols = [...new Set((body.knownSymbols ?? []).map((symbol: unknown) => String(symbol).trim().toUpperCase()))]
     if (assets.some((asset) => !/^[A-Z0-9]{1,20}$/.test(asset))) {
       return json({ error: 'Invalid portfolio asset.' }, 400)
-    }
-    if (knownSymbols.some((symbol) => !/^[A-Z0-9]{1,40}$/.test(symbol))) {
-      return json({ error: 'Invalid previously imported Binance symbol.' }, 400)
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
@@ -131,6 +234,15 @@ Deno.serve(async (request: Request) => {
     if (userError || !user) return json({ error: 'Unauthorized.' }, 401)
 
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey)
+    const { data: existingRotations, error: rotationsError } = await supabaseAdmin
+      .from('spot_rotations')
+      .select('symbol')
+      .eq('user_id', user.id)
+      .eq('match_type', 'AUTO_API')
+
+    if (rotationsError) throw rotationsError
+
+    const knownSymbols = [...new Set((existingRotations ?? []).map(({ symbol }) => String(symbol).trim().toUpperCase()))]
     const { data: connection, error: connectionError } = await supabaseAdmin
       .from('exchange_connections')
       .select('api_key_encrypted, api_secret_encrypted')
@@ -237,10 +349,20 @@ Deno.serve(async (request: Request) => {
       { oldest: null, newest: null },
     )
 
+    const { rotations, unmatchedSellTrades } = buildRotationRows(trades)
+    const { error: syncError } = await supabaseAdmin.rpc('sync_auto_spot_rotations', {
+      p_user_id: user.id,
+      p_symbols: symbolAssets.map(({ symbol }) => symbol),
+      p_rotations: rotations,
+    })
+
+    if (syncError) throw syncError
+
     return json({
-      symbols: symbolAssets.map(({ symbol }) => symbol),
-      trades,
       syncedAt: new Date().toISOString(),
+      symbolsScanned: symbolAssets.length,
+      tradesImported: trades.length,
+      unmatchedSellTrades,
       oldestTradeTime: tradeRange.oldest,
       newestTradeTime: tradeRange.newest,
     })

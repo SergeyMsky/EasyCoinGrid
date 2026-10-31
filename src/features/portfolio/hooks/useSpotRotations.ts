@@ -21,10 +21,9 @@ export function useSpotRotations({ assets, syncFromBinance }: UseSpotRotationsOp
     async (existingRotations: SpotRotation[]) => {
       const autoRotations = existingRotations.filter((rotation) => rotation.match_type === 'AUTO_API')
       const knownAssets = autoRotations.map((rotation) => getSpotRotationBaseAsset(rotation.symbol))
-      const knownSymbols = [...new Set(autoRotations.map((rotation) => rotation.symbol.toUpperCase()))]
       const assetsToSync = [...new Set([...(assetKey ? assetKey.split(',') : []), ...knownAssets])]
 
-      const status = await syncBinanceSpotRotations(assetsToSync, knownSymbols)
+      const status = await syncBinanceSpotRotations(assetsToSync)
       const updatedRotations = await getSpotRotations()
       return { status, rotations: updatedRotations }
     },

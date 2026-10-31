@@ -530,7 +530,7 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
                         type="button"
                         size="sm"
                         onClick={() => setIsConfirmingDisconnect(false)}
-                        className="border-profit-outline bg-profit-subtle text-profit">
+                        className="border-profit-outline bg-profit-subtle hover:border-profit hover:bg-profit-subtle hover:text-profit">
                         Cancel
                       </Button>
                       <Button
@@ -542,7 +542,7 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
                             setIsConfirmingDisconnect(false)
                           }
                         }}
-                        className="border-loss-outline bg-loss-subtle text-loss"
+                        className="border-loss-outline bg-loss-subtle hover:border-loss hover:bg-loss-subtle hover:text-loss"
                         disabled={connectionLoading}>
                         {connectionLoading && <Spinner />}
                         {connectionLoading ? 'Disconnecting...' : 'Disconnect Binance'}

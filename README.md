@@ -66,6 +66,8 @@ The `exchange_connections` table stores Binance credentials in encrypted form. T
 
 Row Level Security is enabled on `exchange_connections`. Its policies restrict authenticated users' select, insert, update, and delete operations to rows whose `user_id` matches `auth.uid()`. Edge Functions also authenticate the caller and scope connection lookups to that user's ID.
 
+Users can directly create, update, or delete only their own `MANUAL` spot rotations. `AUTO_API` rotations are recalculated from Binance trades inside the authenticated `get-binance-spot-trades` Edge Function and written through a database function executable only by `service_role`; the client cannot submit imported rotation rows directly.
+
 The avatar Storage bucket is configured as **public**. Storage policies restrict authenticated upload, update, and listing operations by user folder, but public buckets allow file retrieval by URL without those access policies. Do not treat avatar URLs as private.
 
 ## Binance Integration
