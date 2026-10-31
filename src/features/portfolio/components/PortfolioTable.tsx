@@ -1,7 +1,7 @@
 import { formatNumber, formatPrice } from '@/shared/utils/format-number'
 import { formatSignedValue } from '@/shared/utils/format-signed-value'
 import { type AssetDisplay, type Currency, type FilterOption, type SortDirection, type SortOption } from '@/features/portfolio/portfolio.types'
-import { formatCurrency, formatSignedCurrency } from '@/shared/utils/format-currency'
+import { formatCurrency, formatSignedCurrency, formatUnitPrice } from '@/shared/utils/format-currency'
 import { PortfolioSearch } from './PortfolioSearch'
 import { exportAssetsToCsv } from '@/shared/utils/export-csv'
 import { Download, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react'
@@ -190,9 +190,9 @@ export function PortfolioTable({
                       </div>
                     </td>
                     <td className="h-16.25 px-3 py-2 text-right">{formatCurrency(asset.convertedTotal, currency)}</td>
-                    <td className="h-16.25 px-3 py-2 text-right">{formatCurrency(asset.convertedPrice, currency)}</td>
+                    <td className="h-16.25 px-3 py-2 text-right">{formatUnitPrice(asset.convertedPrice, currency)}</td>
                     <td className="h-16.25 px-3 py-2 text-right">
-                      {asset.convertedAvgBuy === null ? '—' : formatCurrency(asset.convertedAvgBuy, currency)}
+                      {asset.convertedAvgBuy === null ? '—' : formatUnitPrice(asset.convertedAvgBuy, currency)}
                     </td>
                     <td
                       className={`h-16.25 px-3 py-2 text-right ${asset.convertedPnl === null ? '' : asset.convertedPnl >= 0 ? 'text-profit' : 'text-loss'}`}>

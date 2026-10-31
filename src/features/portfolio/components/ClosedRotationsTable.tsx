@@ -1,4 +1,4 @@
-import { formatCurrency, formatSignedCurrency } from '@/shared/utils/format-currency'
+import { formatCurrency, formatSignedCurrency, formatUnitPrice } from '@/shared/utils/format-currency'
 import { formatSignedValue } from '@/shared/utils/format-signed-value'
 import type { Asset, Currency, SpotRotation } from '@/features/portfolio/portfolio.types'
 import { RotationAssetCell } from './RotationAssetCell'
@@ -61,12 +61,12 @@ export function ClosedRotationsTable({ rotations, assetMetadata, currency, curre
                     <td className="px-3 py-2">
                       <ExecutionDetails side="Buy" time={rotation.buy_time} tradeId={rotation.buy_trade_id} orderId={rotation.buy_order_id} />
                     </td>
-                    <td className="px-3 py-2 text-right">{formatCurrency(rotation.buy_price * currencyRate, currency)}</td>
+                    <td className="px-3 py-2 text-right">{formatUnitPrice(rotation.buy_price * currencyRate, currency)}</td>
                     <td className="px-3 py-2">
                       <ExecutionDetails side="Sell" time={rotation.sell_time} tradeId={rotation.sell_trade_id} orderId={rotation.sell_order_id} />
                     </td>
                     <td className="px-3 py-2 text-right">
-                      {rotation.sell_price === null ? '—' : formatCurrency(rotation.sell_price * currencyRate, currency)}
+                      {rotation.sell_price === null ? '—' : formatUnitPrice(rotation.sell_price * currencyRate, currency)}
                     </td>
                     <td className="px-3 py-2 text-right">{rotation.sold_qty}</td>
                     <td className={`px-3 py-2 text-right font-medium ${pnlClass}`}>

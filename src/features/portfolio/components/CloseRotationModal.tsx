@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react'
 import type { CloseRotationInput, SpotRotation } from '@/features/portfolio/portfolio.types'
 import { calculateRotationClose } from '@/features/portfolio/utils/rotationMatching'
 import { Button } from '@/shared/components/Button'
-import { formatCurrency } from '@/shared/utils/format-currency'
+import { formatUnitPrice } from '@/shared/utils/format-currency'
 
 type CloseRotationModalProps = {
   rotation: SpotRotation
@@ -130,7 +130,7 @@ export function CloseRotationModal({ rotation, onCancel, onClose }: CloseRotatio
               {saving ? 'Closing…' : `Close ${soldQty} ${rotation.symbol}`}
             </Button>
           </div>
-          <p className="text-xs text-muted">Buy price: {formatCurrency(rotation.buy_price, 'USD')}</p>
+          <p className="text-xs text-muted">Buy price: {formatUnitPrice(rotation.buy_price, 'USD')}</p>
         </form>
       </section>
     </div>

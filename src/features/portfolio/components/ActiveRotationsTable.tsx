@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { formatCurrency } from '@/shared/utils/format-currency'
+import { formatCurrency, formatUnitPrice } from '@/shared/utils/format-currency'
 import type { Asset, CloseRotationInput, CreateSpotRotationInput, Currency, SpotRotation } from '@/features/portfolio/portfolio.types'
 import { Button } from '@/shared/components/Button'
 import { CloseRotationModal } from './CloseRotationModal'
@@ -85,7 +85,7 @@ export function ActiveRotationsTable({
                         <p className="text-xs text-muted">Order ID: {rotation.buy_order_id ?? '—'}</p>
                       </div>
                     </td>
-                    <td className="px-3 py-2 text-right">{formatCurrency(rotation.buy_price * currencyRate, currency)}</td>
+                    <td className="px-3 py-2 text-right">{formatUnitPrice(rotation.buy_price * currencyRate, currency)}</td>
                     <td className="px-3 py-2 text-right">{rotation.buy_qty - rotation.sold_qty}</td>
                     <td className="px-3 py-2 text-right">{formatCurrency(rotation.fee_amount * currencyRate, currency)}</td>
                     <td className="px-3 py-2 text-right">

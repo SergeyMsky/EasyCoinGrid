@@ -14,7 +14,7 @@ import { ArrowUpRight, Repeat2 } from 'lucide-react'
 import { useSpotPortfolioHistory } from '@/features/portfolio/hooks/useSpotPortfolioHistory'
 import { ButtonLink } from '@/shared/components/Link'
 import { formatSignedCurrency } from '@/shared/utils/format-currency'
-import { formatCurrency } from '@/shared/utils/format-currency'
+import { formatCurrency, formatUnitPrice } from '@/shared/utils/format-currency'
 import { APP_LOCALE } from '@/shared/utils/locale'
 
 const SpotPortfolioPerformance = lazy(() =>
@@ -150,8 +150,8 @@ export function Dashboard({ currency }: DashboardProps) {
           <PortfolioSummary assets={displayAssets} loading={loading} currency={currency} />
           {stablecoinUsdRates && stablecoinRatesUpdatedAt && (
             <p className="mt-2 text-xs text-muted" role="note">
-              Current Kraken rates: 1 USDT = {formatCurrency(stablecoinUsdRates.USDT, 'USD')}; 1 USDC ={' '}
-              {formatCurrency(stablecoinUsdRates.USDC, 'USD')} (updated{' '}
+              Current Kraken rates: 1 USDT = {formatUnitPrice(stablecoinUsdRates.USDT, 'USD')}; 1 USDC ={' '}
+              {formatUnitPrice(stablecoinUsdRates.USDC, 'USD')} (updated{' '}
               {new Intl.DateTimeFormat(APP_LOCALE, { dateStyle: 'short', timeStyle: 'short' }).format(new Date(stablecoinRatesUpdatedAt))}). Average
               buy prices, portfolio history, and historical P/L remain approximate and assume 1 USDT ≈ 1 USD.
             </p>
