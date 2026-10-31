@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { supabase } from '@/shared/lib/supabase'
 import { Eye, EyeOff } from 'lucide-react'
 import { ErrorMessage } from '@/shared/components/ErrorMessage'
-import { validatePassword } from '@/shared/utils/validate-password'
 import { Button } from '@/shared/components/Button'
 
 export function LoginForm({ onForgotPassword }: { onForgotPassword: () => void }) {
@@ -14,13 +13,6 @@ export function LoginForm({ onForgotPassword }: { onForgotPassword: () => void }
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setError(null)
-
-    const passwordError = validatePassword(password)
-
-    if (passwordError) {
-      setError(passwordError)
-      return
-    }
 
     const { error } = await supabase.auth.signInWithPassword({
       email,
