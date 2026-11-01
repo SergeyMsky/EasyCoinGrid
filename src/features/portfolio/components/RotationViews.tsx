@@ -3,6 +3,7 @@ import { ArrowUpRight, History } from 'lucide-react'
 import type { Asset, CloseRotationInput, CreateSpotRotationInput, Currency, SpotRotation } from '@/features/portfolio/portfolio.types'
 import { ActiveRotationsTable } from '@/features/portfolio/components/ActiveRotationsTable'
 import { ClosedRotationsTable } from '@/features/portfolio/components/ClosedRotationsTable'
+import { Skeleton } from '@/shared/components/Skeleton'
 
 type RotationView = 'open' | 'closed'
 
@@ -39,7 +40,7 @@ function RotationTableSkeleton({ activeTab, currency }: { activeTab: RotationVie
     <section className="ui-surface mt-4 overflow-hidden" aria-busy="true">
       <div className="flex min-h-13.75 items-center justify-between border-b border-outline px-4 py-2">
         <h2 className="text-sm font-semibold">{isOpen ? 'Open rotations' : 'Closed history'}</h2>
-        {isOpen && <div aria-hidden="true" className="h-9.5 w-28.75 animate-pulse rounded bg-surface-raised" />}
+        {isOpen && <Skeleton className="h-9.5 w-28.75" />}
       </div>
       <div className="overflow-x-auto">
         <table
@@ -66,9 +67,8 @@ function RotationTableSkeleton({ activeTab, currency }: { activeTab: RotationVie
                   <td
                     key={column}
                     className={`h-19.25 px-3 py-2 ${(isOpen ? columnIndex >= 2 : columnIndex === 2 || columnIndex >= 4) ? 'text-right' : ''}`}>
-                    <div
-                      aria-hidden="true"
-                      className={`ml-auto h-5 animate-pulse rounded bg-surface-raised ${
+                    <Skeleton
+                      className={`ml-auto h-5 ${
                         columnIndex === 0
                           ? 'mr-auto ml-0! w-20'
                           : column.includes('execution')
@@ -79,9 +79,9 @@ function RotationTableSkeleton({ activeTab, currency }: { activeTab: RotationVie
                       }`}
                     />
                     {column.includes('execution') && (
-                      <div aria-hidden="true" className="mt-1 space-y-1">
-                        <div className="h-3 w-20 animate-pulse rounded bg-surface-raised" />
-                        <div className="h-3 w-24 animate-pulse rounded bg-surface-raised" />
+                      <div className="mt-1 space-y-1">
+                        <Skeleton className="h-3 w-20" />
+                        <Skeleton className="h-3 w-24" />
                       </div>
                     )}
                   </td>

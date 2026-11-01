@@ -2,6 +2,7 @@ import { formatSignedValue } from '@/shared/utils/format-signed-value'
 import { type AssetDisplay, type Currency } from '@/features/portfolio/portfolio.types'
 import { formatCurrency, formatSignedCurrency } from '@/shared/utils/format-currency'
 import { CoinImage } from './CoinImage'
+import { Skeleton } from '@/shared/components/Skeleton'
 
 type PortfolioSummaryProps = {
   assets: AssetDisplay[]
@@ -17,23 +18,23 @@ function PortfolioSummarySkeleton() {
       className="ui-surface mt-4 grid grid-cols-1 gap-4 overflow-hidden px-4 py-4 *:flex *:basis-1/4 *:flex-col *:gap-1 *:border-r *:border-outline *:last:border-0 sm:grid-cols-2 lg:grid-cols-4">
       <li>
         <span className="label">Total Value</span>
-        <span aria-hidden="true" className="h-7 w-32 animate-pulse rounded bg-surface-raised sm:h-8" />
-        <span aria-hidden="true" className="h-4 w-25 animate-pulse rounded bg-surface-raised" />
+        <Skeleton className="h-7 w-32 sm:h-8" />
+        <Skeleton className="h-4 w-25" />
       </li>
       <li>
         <span className="label">24h Change</span>
-        <span aria-hidden="true" className="h-7 w-32 animate-pulse rounded bg-surface-raised sm:h-8" />
-        <span aria-hidden="true" className="h-4 w-16 animate-pulse rounded bg-surface-raised" />
+        <Skeleton className="h-7 w-32 sm:h-8" />
+        <Skeleton className="h-4 w-16" />
       </li>
       <li>
         <span className="label">Total P/L</span>
-        <span aria-hidden="true" className="h-7 w-32 animate-pulse rounded bg-surface-raised sm:h-8" />
-        <span aria-hidden="true" className="h-4 w-20 animate-pulse rounded bg-surface-raised" />
+        <Skeleton className="h-7 w-32 sm:h-8" />
+        <Skeleton className="h-4 w-20" />
       </li>
       <li>
         <span className="label">Best 24h</span>
-        <span aria-hidden="true" className="h-7 w-36 animate-pulse rounded bg-surface-raised sm:h-8" />
-        <span aria-hidden="true" className="h-4 w-28 animate-pulse rounded bg-surface-raised" />
+        <Skeleton className="h-7 w-36 sm:h-8" />
+        <Skeleton className="h-4 w-28" />
       </li>
     </ul>
   )

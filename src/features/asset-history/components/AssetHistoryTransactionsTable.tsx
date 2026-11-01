@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight } from 'lucide-react'
 import type { AssetTransaction } from '@/features/asset-history/asset-history.types'
 import { CoinImage } from '@/features/portfolio/components/CoinImage'
+import { Skeleton } from '@/shared/components/Skeleton'
 import { APP_LOCALE } from '@/shared/utils/locale'
 
 const dateHeadingFormatter = new Intl.DateTimeFormat(APP_LOCALE, { day: '2-digit', month: 'short', year: 'numeric' })
@@ -138,8 +139,8 @@ export function AssetHistoryTransactionsTable({
               <tr className="border-t border-outline bg-app">
                 <th colSpan={5} scope="rowgroup" className="h-10.25 px-4 py-3">
                   <div className="flex items-center justify-between gap-4">
-                    <div aria-hidden="true" className="h-3 w-17 animate-pulse rounded bg-surface-raised" />
-                    <div aria-hidden="true" className="h-3 w-21 animate-pulse rounded bg-surface-raised" />
+                    <Skeleton className="h-3 w-17" />
+                    <Skeleton className="h-3 w-21" />
                   </div>
                 </th>
               </tr>
@@ -147,7 +148,7 @@ export function AssetHistoryTransactionsTable({
                 <tr key={index} className="border-t border-outline">
                   {Array.from({ length: 5 }).map((__, cell) => (
                     <td key={cell} className="h-11.75 px-3 py-2">
-                      <div aria-hidden="true" className={`${cell !== 0 ? 'ml-auto' : ''} h-4 w-24 animate-pulse rounded bg-surface-raised`} />
+                      <Skeleton className={`${cell !== 0 ? 'ml-auto' : ''} h-4 w-24`} />
                     </td>
                   ))}
                 </tr>
@@ -221,8 +222,8 @@ export function AssetHistoryTransactionsTable({
                   <tr className="border-t border-outline bg-app">
                     <th colSpan={5} scope="rowgroup" className="h-10.25 px-4 py-3">
                       <div className="flex items-center justify-between gap-4">
-                        <div aria-hidden="true" className="h-3 w-17 animate-pulse rounded bg-surface-raised" />
-                        <div aria-hidden="true" className="h-3 w-21 animate-pulse rounded bg-surface-raised" />
+                        <Skeleton className="h-3 w-17" />
+                        <Skeleton className="h-3 w-21" />
                       </div>
                     </th>
                   </tr>
@@ -230,7 +231,7 @@ export function AssetHistoryTransactionsTable({
                     <tr key={index} className="border-t border-outline">
                       {Array.from({ length: 5 }).map((__, cell) => (
                         <td key={cell} className="h-11.75 px-3 py-2">
-                          <div aria-hidden="true" className={`${cell !== 0 ? 'ml-auto' : ''} h-4 w-24 animate-pulse rounded bg-surface-raised`} />
+                          <Skeleton className={`${cell !== 0 ? 'ml-auto' : ''} h-4 w-24`} />
                         </td>
                       ))}
                     </tr>

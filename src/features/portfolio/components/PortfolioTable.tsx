@@ -7,6 +7,7 @@ import { CoinImage } from './CoinImage'
 import { exportAssetsToCsv } from '@/shared/utils/export-csv'
 import { Download, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react'
 import { Button } from '@/shared/components/Button'
+import { Skeleton } from '@/shared/components/Skeleton'
 
 type PortfolioTableProps = {
   assets: AssetDisplay[]
@@ -49,22 +50,22 @@ function PortfolioSkeleton() {
         <tr key={index} className="border-b border-outline last:border-0">
           <td className="h-16.25 px-3 py-2">
             <div className="flex items-center gap-3">
-              <div className="h-7.5 w-7.5 animate-pulse rounded-full bg-surface-raised" />
+              <Skeleton className="h-7.5 w-7.5 rounded-full" />
               <div className="flex flex-col gap-1">
-                <div className="h-6 w-25 animate-pulse rounded bg-surface-raised" />
-                <div className="h-4 w-12 animate-pulse rounded bg-surface-raised" />
+                <Skeleton className="h-6 w-25" />
+                <Skeleton className="h-4 w-12" />
               </div>
             </div>
           </td>
           {Array.from({ length: 5 }).map((_, cellIndex) => (
             <td key={cellIndex} className="h-16.25 px-3 py-2">
-              <div className="ml-auto h-6 w-20 animate-pulse rounded bg-surface-raised" />
+              <Skeleton className="ml-auto h-6 w-20" />
             </td>
           ))}
           <td className="h-16.25 px-3 py-2">
             <div className="flex flex-col items-end gap-1">
-              <div className="h-6 w-20 animate-pulse rounded bg-surface-raised" />
-              <div className="h-4 w-10 animate-pulse rounded bg-surface-raised" />
+              <Skeleton className="h-6 w-20" />
+              <Skeleton className="h-4 w-10" />
             </div>
           </td>
         </tr>
