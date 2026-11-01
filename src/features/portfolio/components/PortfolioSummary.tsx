@@ -1,6 +1,7 @@
 import { formatSignedValue } from '@/shared/utils/format-signed-value'
 import { type AssetDisplay, type Currency } from '@/features/portfolio/portfolio.types'
 import { formatCurrency, formatSignedCurrency } from '@/shared/utils/format-currency'
+import { CoinImage } from './CoinImage'
 
 type PortfolioSummaryProps = {
   assets: AssetDisplay[]
@@ -97,7 +98,7 @@ export function PortfolioSummary({ assets, loading, currency }: PortfolioSummary
         {bestAsset ? (
           <>
             <strong className="flex gap-2 text-xl sm:text-2xl">
-              {bestAsset.image && <img src={bestAsset.image} alt={bestAsset.asset} className="h-7.5 w-7.5" />}
+              <CoinImage image={bestAsset.image} asset={bestAsset.asset} />
               {bestAsset.asset}{' '}
               <span className={`${bestAsset.change24hPercent >= 0 ? 'text-profit' : 'text-loss'}`}>
                 {formatSignedValue(bestAsset.change24hPercent, '', '%')}

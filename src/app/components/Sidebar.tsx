@@ -1,4 +1,4 @@
-import { FileText, LayoutDashboard, Repeat2 } from 'lucide-react'
+import { FileText, History, LayoutDashboard, Repeat2 } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 
 type SidebarProps = {
@@ -9,6 +9,7 @@ type SidebarProps = {
 const navigationItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/rotations', label: 'Spot rotations', icon: Repeat2 },
+  { to: '/asset-history', label: 'Asset history', icon: History },
 ]
 
 export function Sidebar({ mobileOpen, onNavigate }: SidebarProps) {

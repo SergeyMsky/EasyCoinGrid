@@ -1,4 +1,4 @@
-import { formatCurrency, formatSignedCurrency, formatUnitPrice } from '@/shared/utils/format-currency'
+import { formatSignedCurrency, formatUnitPrice } from '@/shared/utils/format-currency'
 import { formatSignedValue } from '@/shared/utils/format-signed-value'
 import type { Asset, Currency, SpotRotation } from '@/features/portfolio/portfolio.types'
 import { RotationAssetCell } from './RotationAssetCell'

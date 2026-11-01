@@ -17,6 +17,7 @@ import { AuthCallbackPage } from '@/features/auth/pages/AuthCallbackPage'
 import { EmailConfirmedPage } from '@/features/auth/pages/EmailConfirmedPage'
 import { getAvatarUrl } from '@/services/avatar'
 import { PrivacyPage } from '@/pages/PrivacyPage'
+import { AssetHistoryPage } from '@/pages/AssetHistoryPage'
 
 function getStoredCurrency(): Currency {
   const storedCurrency = localStorage.getItem('currency')
@@ -132,6 +133,16 @@ function App() {
             <ProtectedRoute session={session}>
               <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
                 <RotationsPage currency={currency} />
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/asset-history"
+          element={
+            <ProtectedRoute session={session}>
+              <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
+                <AssetHistoryPage />
               </AppLayout>
             </ProtectedRoute>
           }

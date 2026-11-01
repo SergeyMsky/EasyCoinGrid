@@ -14,7 +14,7 @@ import { ArrowUpRight, Repeat2 } from 'lucide-react'
 import { useSpotPortfolioHistory } from '@/features/portfolio/hooks/useSpotPortfolioHistory'
 import { ButtonLink } from '@/shared/components/Link'
 import { formatSignedCurrency } from '@/shared/utils/format-currency'
-import { formatCurrency, formatUnitPrice } from '@/shared/utils/format-currency'
+import { formatUnitPrice } from '@/shared/utils/format-currency'
 import { APP_LOCALE } from '@/shared/utils/locale'
 
 const SpotPortfolioPerformance = lazy(() =>

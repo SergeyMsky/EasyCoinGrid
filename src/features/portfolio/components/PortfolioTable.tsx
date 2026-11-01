@@ -3,6 +3,7 @@ import { formatSignedValue } from '@/shared/utils/format-signed-value'
 import { type AssetDisplay, type Currency, type FilterOption, type SortDirection, type SortOption } from '@/features/portfolio/portfolio.types'
 import { formatCurrency, formatSignedCurrency, formatUnitPrice } from '@/shared/utils/format-currency'
 import { PortfolioSearch } from './PortfolioSearch'
+import { CoinImage } from './CoinImage'
 import { exportAssetsToCsv } from '@/shared/utils/export-csv'
 import { Download, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react'
 import { Button } from '@/shared/components/Button'
@@ -168,7 +169,7 @@ export function PortfolioTable({
                   <tr key={asset.asset} className="transition-colors hover:bg-surface-raised">
                     <td className="h-16.25 px-3 py-2 text-left">
                       <div className="flex items-center gap-3">
-                        {asset.image && <img src={asset.image} alt={asset.asset} className="h-7.5 w-7.5" />}
+                        <CoinImage image={asset.image} asset={asset.asset} />
                         <div className="flex flex-col">
                           <span className="font-medium">{asset.name ?? asset.asset}</span>
                           <span className="text-xs text-muted">{asset.asset}</span>

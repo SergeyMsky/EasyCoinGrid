@@ -516,8 +516,8 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
                     </div>
                   </div>
                   <p className="mt-4 text-xs leading-5 text-muted">
-                    easycoingrid can securely read your Binance balances and market data using your read-only API credentials. Trading and withdrawals
-                    are not available.
+                    easycoingrid can securely read your Binance balances, market data and account history using your read-only API credentials.
+                    Trading and withdrawals are not available.
                   </p>
                 </div>
                 <ErrorMessage message={connectionError} />

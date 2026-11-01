@@ -2,7 +2,7 @@ import { Check, ChevronRight, Cog, LogOut, Menu, Settings, Sparkles, X } from 'l
 import { SORTED_CURRENCY_OPTIONS, type Currency } from '@/features/portfolio/portfolio.types'
 import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
-import logo from '@/assets/logo.png'
+import logo from '@/assets/logo.svg'
 import { ButtonLink } from '@/shared/components/Link'
 
 type HeaderProps = {
@@ -84,9 +84,9 @@ export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl, 
             </button>
           )}
           <Link to={userEmail ? '/dashboard' : '/home'} className="group flex items-center gap-1 sm:gap-2">
-            <img className="h-6 w-6 sm:h-8 sm:w-8" src={logo} alt="EasyCoinGrid Logo" />
+            <img className="h-6 w-6 sm:h-8 sm:w-8" src={logo} alt="CoinBilka Logo" />
             <span className="text-md translate-y-px font-bold tracking-wider text-accent uppercase sm:text-lg">
-              <span className="text-text">Easy</span>CoinGrid
+              <span className="text-text">Coin</span>Bilka
             </span>
           </Link>
           {!userEmail && (
