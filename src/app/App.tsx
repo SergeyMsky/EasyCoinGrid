@@ -26,9 +26,9 @@ function getStoredCurrency(): Currency {
   return CURRENCY_OPTIONS.includes(storedCurrency as Currency) ? (storedCurrency as Currency) : 'USD'
 }
 
-function ProtectedRoute({ session, children }: { session: Session | null; children: ReactNode }) {
+function ProtectedRoute({ session, children }: { session: Session | null; children: (session: Session) => ReactNode }) {
   if (!session) return <Navigate to="/auth" replace />
-  return <>{children}</>
+  return <>{children(session)}</>
 }
 
 function PublicRoute({ session, children }: { session: Session | null; children: ReactNode }) {
@@ -140,9 +140,11 @@ function App() {
             path="/dashboard"
             element={
               <ProtectedRoute session={session}>
-                <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
-                  <Dashboard currency={currency} userId={session!.user.id} />
-                </AppLayout>
+                {(authenticatedSession) => (
+                  <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
+                    <Dashboard currency={currency} userId={authenticatedSession.user.id} />
+                  </AppLayout>
+                )}
               </ProtectedRoute>
             }
           />
@@ -150,9 +152,11 @@ function App() {
             path="/rotations"
             element={
               <ProtectedRoute session={session}>
-                <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
-                  <RotationsPage currency={currency} userId={session!.user.id} />
-                </AppLayout>
+                {(authenticatedSession) => (
+                  <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
+                    <RotationsPage currency={currency} userId={authenticatedSession.user.id} />
+                  </AppLayout>
+                )}
               </ProtectedRoute>
             }
           />
@@ -160,9 +164,11 @@ function App() {
             path="/asset-history"
             element={
               <ProtectedRoute session={session}>
-                <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
-                  <AssetHistoryPage userId={session!.user.id} />
-                </AppLayout>
+                {(authenticatedSession) => (
+                  <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
+                    <AssetHistoryPage userId={authenticatedSession.user.id} />
+                  </AppLayout>
+                )}
               </ProtectedRoute>
             }
           />
@@ -170,9 +176,16 @@ function App() {
             path="/settings"
             element={
               <ProtectedRoute session={session}>
-                <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
-                  <SettingsPage userEmail={session?.user.email ?? ''} session={session} avatarUrl={avatarUrl} setAvatarUrl={setAvatarUrl} />
-                </AppLayout>
+                {(authenticatedSession) => (
+                  <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
+                    <SettingsPage
+                      userEmail={authenticatedSession.user.email ?? ''}
+                      session={authenticatedSession}
+                      avatarUrl={avatarUrl}
+                      setAvatarUrl={setAvatarUrl}
+                    />
+                  </AppLayout>
+                )}
               </ProtectedRoute>
             }
           />

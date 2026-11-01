@@ -30,8 +30,9 @@ describe('CoinImage', () => {
     expect(screen.getByText('BTC')).toHaveClass('rounded-full', 'h-8', 'w-8')
   })
 
-  it('shows a fixed-size skeleton while the coin image loads', () => {
-    render(<CoinImage asset="BTC" image={null} loading className="h-8 w-8" />)
+  it('shows a fixed-size skeleton while resolving a missing image', () => {
+    mocks.getCoinsMetadata.mockReturnValue(new Promise(() => {}))
+    render(<CoinImage asset="BTC" image={null} resolveMissingImage className="h-8 w-8" />)
 
     expect(screen.getByRole('img', { name: 'Loading BTC image' })).toHaveAttribute('aria-busy', 'true')
     expect(screen.getByRole('img', { name: 'Loading BTC image' })).toHaveClass('animate-pulse', 'rounded-full', 'h-8', 'w-8')

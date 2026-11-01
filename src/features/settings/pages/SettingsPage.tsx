@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { AlertCircle, Camera, CheckCircle2, Eye, EyeOff, Network, ShieldCheck, UserRound, type LucideIcon } from 'lucide-react'
+import { AlertCircle, Camera, CheckCircle2, Network, ShieldCheck, UserRound, type LucideIcon } from 'lucide-react'
 import {
   connectBinance,
   disconnectBinance,
@@ -16,6 +16,7 @@ import { validatePassword } from '@/shared/utils/validate-password'
 import binance from '@/assets/binance.svg'
 import { Spinner } from '@/shared/components/Spinner'
 import { Button } from '@/shared/components/Button'
+import { PasswordField } from '@/shared/components/PasswordField'
 import type { Session } from '@supabase/supabase-js'
 import { getAvatarUrl, uploadAvatar } from '@/services/avatar'
 import { portfolioQueryKeys } from '@/features/portfolio/api/portfolio-query-keys'
@@ -55,11 +56,6 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null)
   const [passwordLoading, setPasswordLoading] = useState(false)
-
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [showEmailCurrentPassword, setShowEmailCurrentPassword] = useState(false)
 
   const [apiKey, setApiKey] = useState('')
   const [apiSecret, setApiSecret] = useState('')
@@ -354,41 +350,30 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
               </>
             )}
             <form onSubmit={handleEmailSubmit} className="mt-6">
-              <label className="flex flex-1 flex-col gap-2">
-                <span className="label">Email address</span>
-                <input
-                  className="input px-4 py-3"
-                  type="email"
-                  name="email"
-                  id="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </label>
-              <label className="mt-4 flex flex-col gap-2">
-                <span className="label">Current password to confirm</span>
-                <div className="relative">
+              <div className="grid gap-4">
+                <label className="flex flex-col gap-2">
+                  <span className="label">Email address</span>
                   <input
-                    name="email-current-password"
-                    value={emailCurrentPassword}
-                    onChange={(event) => setEmailCurrentPassword(event.target.value)}
-                    className="input px-4 py-3 pr-11"
-                    type={showEmailCurrentPassword ? 'text' : 'password'}
-                    autoComplete="current-password"
-                    placeholder="••••••••"
+                    className="input px-4 py-3"
+                    type="email"
+                    name="email"
+                    id="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                   />
-                  <button
-                    type="button"
-                    aria-label={showEmailCurrentPassword ? 'Hide current password' : 'Show current password'}
-                    onClick={() => setShowEmailCurrentPassword((visible) => !visible)}
-                    className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted hover:text-text">
-                    {showEmailCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-              </label>
+                </label>
+                <PasswordField
+                  label="Current password to confirm"
+                  name="email-current-password"
+                  value={emailCurrentPassword}
+                  onChange={(event) => setEmailCurrentPassword(event.target.value)}
+                  autoComplete="current-password"
+                  visibilityLabel="current password"
+                  required
+                />
+              </div>
               <ErrorMessage message={emailError} />
               <SuccessMessage message={emailSuccess} />
               <Button type="submit" variant="filled" className="mt-5" disabled={emailLoading}>
@@ -404,76 +389,28 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
             <p className="text-sm text-muted">Use a strong, unique password for your account.</p>
             <form onSubmit={handlePasswordSubmit} className="mt-6">
               <div className="grid gap-4">
-                <label className="flex flex-col gap-2">
-                  <span className="label">Current password</span>
-                  <div className="relative">
-                    <input
-                      value={password.current}
-                      onChange={(event) =>
-                        setPassword({
-                          ...password,
-                          current: event.target.value,
-                        })
-                      }
-                      className="input px-4 py-3 pr-11"
-                      type={showCurrentPassword ? 'text' : 'password'}
-                      autoComplete="current-password"
-                      placeholder="••••••••"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                      className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted hover:text-text">
-                      {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </label>
-                <label className="flex flex-col gap-2">
-                  <span className="label">New password</span>
-                  <div className="relative">
-                    <input
-                      value={password.new}
-                      onChange={(event) => setPassword({ ...password, new: event.target.value })}
-                      className="input px-4 py-3 pr-11"
-                      type={showNewPassword ? 'text' : 'password'}
-                      autoComplete="new-password"
-                      placeholder="••••••••"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowNewPassword(!showNewPassword)}
-                      className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted hover:text-text">
-                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </label>
-                <label className="flex flex-col gap-2">
-                  <span className="label">Confirm new password</span>
-                  <div className="relative">
-                    <input
-                      value={password.confirm}
-                      onChange={(event) =>
-                        setPassword({
-                          ...password,
-                          confirm: event.target.value,
-                        })
-                      }
-                      className="input px-4 py-3 pr-11"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      autoComplete="new-password"
-                      placeholder="••••••••"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted hover:text-text">
-                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                </label>
+                <PasswordField
+                  label="Current password"
+                  value={password.current}
+                  onChange={(event) => setPassword({ ...password, current: event.target.value })}
+                  autoComplete="current-password"
+                  required
+                />
+                <PasswordField
+                  label="New password"
+                  value={password.new}
+                  onChange={(event) => setPassword({ ...password, new: event.target.value })}
+                  autoComplete="new-password"
+                  required
+                />
+                <PasswordField
+                  label="Confirm new password"
+                  value={password.confirm}
+                  onChange={(event) => setPassword({ ...password, confirm: event.target.value })}
+                  autoComplete="new-password"
+                  visibilityLabel="password confirmation"
+                  required
+                />
               </div>
               <ErrorMessage message={passwordError} />
               <SuccessMessage message={passwordSuccess} />

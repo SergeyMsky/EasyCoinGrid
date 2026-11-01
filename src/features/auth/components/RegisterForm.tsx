@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { supabase } from '@/shared/lib/supabase'
-import { Eye, EyeOff } from 'lucide-react'
 import { ErrorMessage } from '@/shared/components/ErrorMessage'
 import { validatePassword } from '@/shared/utils/validate-password'
 import { Button } from '@/shared/components/Button'
+import { PasswordField } from '@/shared/components/PasswordField'
 import { SuccessMessage } from '@/shared/components/SuccessMessage'
 import { Spinner } from '@/shared/components/Spinner'
 import { Link } from 'react-router-dom'
@@ -13,7 +13,6 @@ export function RegisterForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const registrationCompleted = Boolean(success)
 
@@ -53,38 +52,28 @@ export function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="w-max-sm m-auto flex flex-col">
-      <label className="flex flex-col gap-2">
-        <span className="label">Email</span>
-        <input
-          className="input h-13 px-4 py-2"
-          type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          placeholder="user@example.com"
-          disabled={registrationCompleted || loading}
-          required
-        />
-      </label>
-      <label className="mt-4 flex flex-col gap-2">
-        <span className="label">Password</span>
-        <div className="relative">
+      <div className="grid gap-4">
+        <label className="flex flex-col gap-2">
+          <span className="label">Email</span>
           <input
-            className="input h-13 px-4 py-2 pr-11"
-            type={showPassword ? 'text' : 'password'}
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="••••••••"
+            className="input h-13 px-4 py-2"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            placeholder="user@example.com"
             disabled={registrationCompleted || loading}
             required
           />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute top-1/2 right-3 -translate-y-1/2 cursor-pointer text-muted hover:text-text">
-            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
-        </div>
-      </label>
+        </label>
+        <PasswordField
+          label="Password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          autoComplete="new-password"
+          disabled={registrationCompleted || loading}
+          required
+        />
+      </div>
       <p className="mt-2 text-xs text-muted">Use at least 8 characters with uppercase, lowercase, number, and special character.</p>
       <SuccessMessage message={success} />
       <ErrorMessage message={error} />

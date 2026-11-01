@@ -115,7 +115,7 @@ export function SpotPortfolioPerformance({ snapshots, loading, error, enabled, a
               <p className="label">Spot portfolio value</p>
               {end ? (
                 <>
-                  <p className="mt-1 text-2xl font-semibold text-text sm:text-3xl">{formatCurrency(end.valueUsd * currencyRate, currency)}</p>
+                  <p className="mt-1 text-2xl font-bold text-text sm:text-3xl">{formatCurrency(end.valueUsd * currencyRate, currency)}</p>
                   {change && (
                     <p className={`mt-1 text-sm font-medium ${change.changeUsd >= 0 ? 'text-profit' : 'text-loss'}`}>
                       {formatSignedCurrency(change.changeUsd * currencyRate, currency)}
@@ -209,7 +209,7 @@ export function SpotPortfolioPerformance({ snapshots, loading, error, enabled, a
           )}
         </div>
         <div className="min-w-0">
-          <div className="flex items-start justify-between">
+          <div className="flex items-center justify-between">
             <p className="label">Portfolio allocation</p>
             {allocation.total > 0 && <p className="text-sm font-medium text-text">{formatCurrency(allocation.total, currency)}</p>}
           </div>
@@ -242,7 +242,7 @@ export function SpotPortfolioPerformance({ snapshots, loading, error, enabled, a
                 {selectedAllocation && (
                   <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
                     <span className="max-w-36 truncate text-sm font-medium text-text">{selectedAllocation.symbol}</span>
-                    <span className="mt-1 text-lg font-semibold text-text">{formatCurrency(selectedAllocation.value, currency)}</span>
+                    <span className="mt-1 text-lg font-medium text-text">{formatCurrency(selectedAllocation.value, currency)}</span>
                     <span className="mt-0.5 text-sm text-muted">{selectedAllocation.percentage.toFixed(2)}%</span>
                   </div>
                 )}
@@ -258,7 +258,7 @@ export function SpotPortfolioPerformance({ snapshots, loading, error, enabled, a
                       aria-label={`${segment.symbol}, ${segment.percentage.toFixed(2)} percent`}>
                       <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: segment.color }} />
                       <span className="min-w-0 flex-1 truncate text-muted">{segment.symbol}</span>
-                      <span className="shrink-0 font-semibold text-text">{segment.percentage.toFixed(2)}%</span>
+                      <span className="shrink-0 text-text">{segment.percentage.toFixed(2)}%</span>
                     </button>
                   </li>
                 ))}

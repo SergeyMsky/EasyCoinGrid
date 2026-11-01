@@ -63,7 +63,7 @@ export function PortfolioSummary({ assets, loading, currency }: PortfolioSummary
     return best
   }, null)
 
-  if (!loading) {
+  if (loading) {
     return <PortfolioSummarySkeleton />
   }
 
