@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AssetTransaction } from '@/features/asset-history/asset-history.types'
 import { AssetHistoryPage } from './AssetHistoryPage'
@@ -21,6 +22,7 @@ vi.mock('@/features/settings/api/settings.api', () => ({
 }))
 
 vi.mock('@/features/portfolio/api/portfolio.api', () => ({
+  getCachedCoinImage: () => null,
   getCoinsMetadata: mocks.getCoinsMetadata,
   getPortfolioBalances: mocks.getPortfolioBalances,
 }))
@@ -98,6 +100,15 @@ const deposit: AssetTransaction = {
   created_at: '2026-10-29T12:00:00.000Z',
 }
 
+function renderAssetHistoryPage() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <AssetHistoryPage userId="user-1" />
+    </QueryClientProvider>,
+  )
+}
+
 describe('AssetHistoryPage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -124,11 +135,11 @@ describe('AssetHistoryPage', () => {
   })
 
   it('shows imported asset movements and refreshes the list after sync', async () => {
-    render(<AssetHistoryPage />)
+    renderAssetHistoryPage()
 
     expect(await screen.findByRole('heading', { name: 'Asset history' })).toBeInTheDocument()
     expect(await screen.findByText('Deposit')).toBeInTheDocument()
-    expect(await screen.findByRole('img', { name: 'BTC' })).toHaveAttribute('src', 'https://example.com/btc.png')
+    expect(await screen.findByRole('img', { name: 'BTC' }, { timeout: 3000 })).toHaveAttribute('src', 'https://example.com/btc.png')
     expect(screen.getByText('+0.25 BTC')).toBeInTheDocument()
     expect(screen.getByText('BTC')).toBeInTheDocument()
 
@@ -144,10 +155,22 @@ describe('AssetHistoryPage', () => {
     )
   })
 
+  it('retries missing coin images and replaces the loading placeholder when one is returned', async () => {
+    mocks.getCoinsMetadata
+      .mockResolvedValueOnce({ BTC: { name: 'BTC', image: null } })
+      .mockResolvedValueOnce({ BTC: { name: 'BTC', image: null } })
+      .mockResolvedValueOnce({ BTC: { name: 'Bitcoin', image: 'https://example.com/btc.png' } })
+
+    renderAssetHistoryPage()
+
+    expect(await screen.findByRole('img', { name: 'BTC' })).toHaveAttribute('src', 'https://example.com/btc.png')
+    expect(mocks.getCoinsMetadata).toHaveBeenCalledTimes(3)
+  })
+
   it('explains that Binance must be connected before syncing', async () => {
     mocks.getBinanceConnectionStatus.mockResolvedValue(false)
     mocks.getAssetTransactions.mockResolvedValue([])
-    render(<AssetHistoryPage />)
+    renderAssetHistoryPage()
 
     expect(await screen.findByRole('status')).toHaveTextContent('Connect Binance in Settings')
     expect(screen.getByRole('button', { name: 'Sync now' })).toBeDisabled()
@@ -159,9 +182,10 @@ describe('AssetHistoryPage', () => {
     const previousDay = { ...deposit, id: 'previous-day', occurred_at: '2026-10-29T12:00:00.000Z' }
     mocks.getAssetTransactions.mockResolvedValue([latest, sameDay, previousDay])
 
-    render(<AssetHistoryPage />)
+    renderAssetHistoryPage()
 
     const table = await screen.findByRole('table', { name: 'Asset history' })
+    await waitFor(() => expect(within(table).getAllByText('Deposit')).toHaveLength(3))
     const dateGroups = within(table).getAllByRole('rowgroup')
 
     expect(dateGroups).toHaveLength(3)
@@ -188,7 +212,7 @@ describe('AssetHistoryPage', () => {
       },
     )
 
-    render(<AssetHistoryPage />)
+    renderAssetHistoryPage()
 
     await waitFor(() => expect(mocks.getAssetTransactions).toHaveBeenCalledWith(0))
     await waitFor(() => expect(TestIntersectionObserver.latest).not.toBeNull())
@@ -203,7 +227,7 @@ describe('AssetHistoryPage', () => {
       await nextPage
     })
 
-    expect(screen.queryByRole('rowgroup', { name: 'Loading more transactions' })).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.queryByRole('rowgroup', { name: 'Loading more transactions' })).not.toBeInTheDocument())
     expect(screen.getAllByText('Deposit')).toHaveLength(101)
   })
 })

@@ -19,6 +19,7 @@ type PortfolioTableProps = {
   view: FilterOption
   refreshPortfolio: () => void
   loading: boolean
+  refreshing?: boolean
   lastUpdated: Date | null
   currency: Currency
 }
@@ -83,6 +84,7 @@ export function PortfolioTable({
   view,
   refreshPortfolio,
   loading,
+  refreshing = false,
   lastUpdated,
   currency,
 }: PortfolioTableProps) {
@@ -107,9 +109,15 @@ export function PortfolioTable({
               <Download className="h-5 w-5" />
               <span className="text-xs font-medium">Export</span>
             </Button>
-            <Button type="button" variant="dashboard" aria-label="Refresh portfolio" onClick={refreshPortfolio} disabled={loading} className="gap-1">
-              <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin text-text' : ''}`} />
-              <span className="text-xs font-medium">{loading ? 'Refreshing…' : 'Refresh'}</span>
+            <Button
+              type="button"
+              variant="dashboard"
+              aria-label="Refresh portfolio"
+              onClick={refreshPortfolio}
+              disabled={loading || refreshing}
+              className="gap-1">
+              <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin text-text' : ''}`} />
+              <span className="text-xs font-medium">{refreshing ? 'Refreshing…' : 'Refresh'}</span>
             </Button>
           </div>
         </div>

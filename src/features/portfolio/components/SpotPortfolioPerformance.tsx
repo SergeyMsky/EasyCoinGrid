@@ -107,7 +107,7 @@ export function SpotPortfolioPerformance({ snapshots, loading, error, enabled, a
 
   return (
     <section className="ui-surface mt-4 overflow-hidden p-4">
-      {error && <WarningMessage message={error} />}
+      {error && <WarningMessage message={error} className="mt-0 mb-4" />}
       <div className="grid lg:grid-cols-[minmax(0,1.8fr)_minmax(260px,350px)]">
         <div className="mb-6 min-w-0 border-b border-outline pb-6 lg:mr-8 lg:mb-0 lg:border-r lg:border-b-0 lg:pt-0 lg:pr-8 lg:pb-0">
           <div className="flex flex-wrap items-start justify-between gap-4">

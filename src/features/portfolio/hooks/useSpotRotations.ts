@@ -1,114 +1,112 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { CloseRotationInput, CreateSpotRotationInput, SpotRotation } from '@/features/portfolio/portfolio.types'
 import { closeSpotRotation, createSpotRotation, getSpotRotations } from '@/features/portfolio/api/spot-rotations.api'
 import { syncBinanceSpotRotations, type SpotRotationSyncStatus } from '@/features/portfolio/api/binance-spot-trades.api'
 import { getSpotRotationBaseAsset } from '@/features/portfolio/utils/spot-rotation-symbol'
+import { portfolioQueryKeys } from '@/features/portfolio/api/portfolio-query-keys'
 
 type UseSpotRotationsOptions = {
+  userId: string
   assets: string[]
   syncFromBinance: boolean
 }
 
-export function useSpotRotations({ assets, syncFromBinance }: UseSpotRotationsOptions) {
-  const [rotations, setRotations] = useState<SpotRotation[]>([])
-  const [loading, setLoading] = useState(true)
-  const [syncing, setSyncing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [syncStatus, setSyncStatus] = useState<SpotRotationSyncStatus | null>(null)
-  const assetKey = [...new Set(assets.map((asset) => asset.trim().toUpperCase()).filter(Boolean))].sort().join(',')
+const ROTATIONS_STALE_TIME = 60 * 1000
 
-  const runSync = useCallback(
-    async (existingRotations: SpotRotation[]) => {
-      const autoRotations = existingRotations.filter((rotation) => rotation.match_type === 'AUTO_API')
+export function useSpotRotations({ userId, assets, syncFromBinance }: UseSpotRotationsOptions) {
+  const queryClient = useQueryClient()
+  const queryKey = portfolioQueryKeys.rotations(userId)
+  const syncStatusKey = portfolioQueryKeys.rotationSyncStatus(userId)
+  const normalizedAssets = [...new Set(assets.map((asset) => asset.trim().toUpperCase()).filter(Boolean))]
+
+  const rotationsQuery = useQuery({
+    queryKey,
+    queryFn: getSpotRotations,
+    enabled: Boolean(userId),
+    staleTime: ROTATIONS_STALE_TIME,
+    gcTime: 60 * 60 * 1000,
+  })
+  const syncStatusQuery = useQuery<SpotRotationSyncStatus | null>({
+    queryKey: syncStatusKey,
+    queryFn: async () => null,
+    enabled: false,
+    initialData: null,
+    staleTime: Infinity,
+    gcTime: 60 * 60 * 1000,
+  })
+
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      if (!syncFromBinance) {
+        throw new Error('Connect Binance before syncing spot rotations.')
+      }
+
+      const currentRotations: SpotRotation[] =
+        queryClient.getQueryData<SpotRotation[]>(queryKey) ??
+        (await queryClient.fetchQuery<SpotRotation[]>({ queryKey, queryFn: getSpotRotations, staleTime: ROTATIONS_STALE_TIME }))
+      const autoRotations = currentRotations.filter((rotation) => rotation.match_type === 'AUTO_API')
       const knownAssets = autoRotations.map((rotation) => getSpotRotationBaseAsset(rotation.symbol))
-      const assetsToSync = [...new Set([...(assetKey ? assetKey.split(',') : []), ...knownAssets])]
-
+      const assetsToSync = [...new Set([...normalizedAssets, ...knownAssets])]
       const status = await syncBinanceSpotRotations(assetsToSync)
       const updatedRotations = await getSpotRotations()
+
       return { status, rotations: updatedRotations }
     },
-    [assetKey],
-  )
+    onSuccess: ({ status, rotations }) => {
+      queryClient.setQueryData(syncStatusKey, status)
+      queryClient.setQueryData(queryKey, rotations)
+    },
+  })
+
+  const createMutation = useMutation({
+    mutationFn: createSpotRotation,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  })
+
+  const closeMutation = useMutation({
+    mutationFn: ({ rotation, input }: { rotation: SpotRotation; input: CloseRotationInput }) => closeSpotRotation(rotation.id, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  })
 
   const refreshRotations = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      setRotations(await getSpotRotations())
-    } catch (loadError) {
-      const message = loadError instanceof Error ? loadError.message : 'Unable to load spot rotations.'
-      setError(message)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+    await queryClient.invalidateQueries({ queryKey })
+  }, [queryClient, queryKey])
 
   const syncNow = useCallback(async () => {
     if (!syncFromBinance) return
-
-    setSyncing(true)
-    setError(null)
     try {
-      const existingRotations = await getSpotRotations()
-      setRotations(existingRotations)
-      const result = await runSync(existingRotations)
-      setSyncStatus(result.status)
-      setRotations(result.rotations)
-    } catch (syncError) {
-      setError(syncError instanceof Error ? syncError.message : 'Unable to sync Binance spot rotations.')
-    } finally {
-      setSyncing(false)
+      await syncMutation.mutateAsync()
+    } catch {
+      // The mutation error is returned through the hook and displayed by the page.
     }
-  }, [runSync, syncFromBinance])
-
-  useEffect(() => {
-    let active = true
-
-    async function loadAndSync() {
-      setError(null)
-
-      try {
-        const existingRotations = await getSpotRotations()
-        if (!active) return
-        setRotations(existingRotations)
-
-        if (syncFromBinance) {
-          setLoading(true)
-          const result = await runSync(existingRotations)
-          if (!active) return
-          setSyncStatus(result.status)
-          setRotations(result.rotations)
-        }
-      } catch (loadError) {
-        if (active) setError(loadError instanceof Error ? loadError.message : 'Unable to load spot rotations.')
-      } finally {
-        if (active) setLoading(false)
-      }
-    }
-
-    void loadAndSync()
-
-    return () => {
-      active = false
-    }
-  }, [runSync, syncFromBinance])
+  }, [syncFromBinance, syncMutation])
 
   const addRotation = useCallback(
     async (input: CreateSpotRotationInput) => {
-      await createSpotRotation(input)
-      await refreshRotations()
+      await createMutation.mutateAsync(input)
     },
-    [refreshRotations],
+    [createMutation],
   )
 
   const closeRotation = useCallback(
     async (rotation: SpotRotation, input: CloseRotationInput) => {
-      await closeSpotRotation(rotation.id, input)
-      await refreshRotations()
+      await closeMutation.mutateAsync({ rotation, input })
     },
-    [refreshRotations],
+    [closeMutation],
   )
 
-  return { rotations, loading, syncing, error, syncStatus, syncNow, refreshRotations, addRotation, closeRotation }
+  const error = rotationsQuery.error ?? syncMutation.error
+
+  return {
+    rotations: rotationsQuery.data ?? [],
+    loading: rotationsQuery.isPending,
+    syncing: syncMutation.isPending,
+    error: error instanceof Error ? error.message : error ? 'Unable to load spot rotations.' : null,
+    syncStatus: syncStatusQuery.data,
+    syncNow,
+    refreshRotations,
+    addRotation,
+    closeRotation,
+  }
 }

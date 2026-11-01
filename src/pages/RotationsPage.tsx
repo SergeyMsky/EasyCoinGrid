@@ -1,11 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { usePortfolioData } from '@/features/portfolio/hooks/usePortfolioData'
 import { useSpotRotations } from '@/features/portfolio/hooks/useSpotRotations'
 import { ActiveRotationsTable } from '@/features/portfolio/components/ActiveRotationsTable'
 import { ClosedRotationsTable } from '@/features/portfolio/components/ClosedRotationsTable'
-import { getCoinsMetadata } from '@/features/portfolio/api/portfolio.api'
-import { FALLBACK_RATES, getExchangeRates } from '@/features/portfolio/api/exchange-rates.api'
-import type { Asset, Currency } from '@/features/portfolio/portfolio.types'
+import { useCoinMetadata } from '@/features/portfolio/hooks/useCoinMetadata'
+import { useExchangeRates } from '@/features/portfolio/hooks/useExchangeRates'
+import type { Currency } from '@/features/portfolio/portfolio.types'
 import { getSpotRotationBaseAsset } from '@/features/portfolio/utils/spot-rotation-symbol'
 import { ErrorMessage } from '@/shared/components/ErrorMessage'
 import { WarningMessage } from '@/shared/components/WarningMessage'
@@ -92,11 +92,10 @@ function RotationTableSkeleton({ activeTab, currency }: { activeTab: 'open' | 'c
   )
 }
 
-export function RotationsPage({ currency }: { currency: Currency }) {
+export function RotationsPage({ currency, userId }: { currency: Currency; userId: string }) {
   const [activeTab, setActiveTab] = useState<'open' | 'closed'>('open')
-  const [rates, setRates] = useState<Record<Currency, number>>(FALLBACK_RATES)
-  const [rotationAssetMetadata, setRotationAssetMetadata] = useState<Record<string, Pick<Asset, 'name' | 'image'>>>({})
-  const { assets, loading: portfolioLoading, error: portfolioError, isBinanceConnected } = usePortfolioData()
+  const { rates } = useExchangeRates(userId)
+  const { assets, loading: portfolioLoading, error: portfolioError, isBinanceConnected } = usePortfolioData(userId)
   const {
     rotations,
     loading: rotationsLoading,
@@ -107,6 +106,7 @@ export function RotationsPage({ currency }: { currency: Currency }) {
     addRotation,
     closeRotation,
   } = useSpotRotations({
+    userId,
     assets: assets.map((asset) => asset.asset),
     syncFromBinance: isBinanceConnected === true,
   })
@@ -126,9 +126,10 @@ export function RotationsPage({ currency }: { currency: Currency }) {
   const currencyRate = rates[currency] ?? 1
   const rotationAssets = useMemo(() => [...new Set(rotations.map((rotation) => getSpotRotationBaseAsset(rotation.symbol)))], [rotations])
   const missingRotationAssets = useMemo(
-    () => rotationAssets.filter((symbol) => !assets.some((asset) => asset.asset === symbol) && !rotationAssetMetadata[symbol]),
-    [assets, rotationAssets, rotationAssetMetadata],
+    () => rotationAssets.filter((symbol) => !assets.some((asset) => asset.asset === symbol)),
+    [assets, rotationAssets],
   )
+  const { data: rotationAssetMetadata = {}, error: rotationMetadataError } = useCoinMetadata(userId, missingRotationAssets)
   const assetMetadata = useMemo(() => {
     const metadata = { ...rotationAssetMetadata }
 
@@ -142,53 +143,8 @@ export function RotationsPage({ currency }: { currency: Currency }) {
     return metadata
   }, [assets, rotationAssetMetadata])
 
-  useEffect(() => {
-    let active = true
-    void getExchangeRates()
-      .then(({ rates: exchangeRates }) => {
-        if (active) {
-          setRates({
-            ...FALLBACK_RATES,
-            ...exchangeRates,
-            USD: 1,
-          })
-        }
-      })
-      .catch((rateError: unknown) => {
-        if (active) {
-          console.warn('Rotation exchange rates unavailable:', rateError)
-          setRates(FALLBACK_RATES)
-        }
-      })
-
-    return () => {
-      active = false
-    }
-  }, [])
-
-  useEffect(() => {
-    if (portfolioLoading || missingRotationAssets.length === 0) return
-
-    let active = true
-    void getCoinsMetadata(missingRotationAssets)
-      .then((metadata) => {
-        if (active) {
-          setRotationAssetMetadata((current) => ({ ...current, ...metadata }))
-        }
-      })
-      .catch((metadataError: unknown) => {
-        if (active) {
-          console.warn('Rotation coin metadata unavailable:', metadataError)
-        }
-      })
-
-    return () => {
-      active = false
-    }
-  }, [missingRotationAssets, portfolioLoading])
-
   return (
-    <main className="mx-auto px-4 py-10">
+    <main className="mx-auto px-4 pt-10 pb-4">
       <div className="flex flex-wrap items-end justify-between gap-5">
         <div>
           <p className="label mb-2 text-accent">Binance Spot</p>
@@ -233,6 +189,7 @@ export function RotationsPage({ currency }: { currency: Currency }) {
       </section>
 
       {portfolioError && <WarningMessage message={`Unable to load portfolio data: ${portfolioError}`} />}
+      {rotationMetadataError instanceof Error && <WarningMessage message={`Unable to load coin details: ${rotationMetadataError.message}`} />}
       <p className="mt-2 text-xs text-muted" role="note">
         Imported trade prices and historical rotation P/L are approximate and assume 1 USDT ≈ 1 USD; historical USDT/USD rates are not applied.
       </p>
@@ -246,9 +203,11 @@ export function RotationsPage({ currency }: { currency: Currency }) {
       {isBinanceConnected === true && (
         <details className="ui-surface mt-4 min-w-0 overflow-hidden">
           <summary className="flex cursor-pointer list-none items-center gap-2 p-4 text-sm font-medium text-text hover:bg-surface-raised [&::-webkit-details-marker]:hidden">
-            <span
-              className={`h-2 w-2 shrink-0 rounded-full ${syncStatus ? 'bg-accent shadow-[0_0_6px_2px_var(--color-accent)]/80' : 'animate-pulse bg-muted shadow-[0_0_6px_2px_var(--color-muted)]/80'}`}
-            />
+            <span className="relative flex size-2.5">
+              <span
+                className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${syncStatus ? 'bg-accent' : 'animate-ping bg-muted'}`}></span>
+              <span className={`relative inline-flex size-2.5 rounded-full opacity-75 ${syncStatus ? 'bg-accent' : 'bg-muted'}`}></span>
+            </span>
             Binance sync
             <span className="flex-1 truncate text-xs font-normal text-muted">
               {syncStatus

@@ -1,5 +1,7 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { createElement, type ReactNode } from 'react'
 import { usePortfolioData } from './usePortfolioData'
 
 const mocks = vi.hoisted(() => ({
@@ -25,6 +27,16 @@ vi.mock('../api/usdt-usd-rate.api', () => ({
   getStablecoinUsdRates: mocks.getStablecoinUsdRates,
 }))
 
+function createQueryWrapper() {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false, refetchInterval: false } },
+  })
+
+  return function QueryWrapper({ children }: { children: ReactNode }) {
+    return createElement(QueryClientProvider, { client: queryClient }, children)
+  }
+}
+
 describe('usePortfolioData', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -46,7 +58,7 @@ describe('usePortfolioData', () => {
   })
 
   it('converts current Binance USDT prices to USD with the current Kraken rate', async () => {
-    const { result } = renderHook(() => usePortfolioData())
+    const { result } = renderHook(() => usePortfolioData('user-1'), { wrapper: createQueryWrapper() })
 
     await waitFor(() => expect(result.current.assets).toHaveLength(1))
 
@@ -63,7 +75,7 @@ describe('usePortfolioData', () => {
     mocks.getPortfolioBalances.mockResolvedValue([{ asset: 'USDC', free: '1', locked: '0' }])
     mocks.getBinancePrice.mockResolvedValue({ price: 1, change24h: 0, change24hPercent: 0 })
 
-    const { result } = renderHook(() => usePortfolioData())
+    const { result } = renderHook(() => usePortfolioData('user-1'), { wrapper: createQueryWrapper() })
 
     await waitFor(() => expect(result.current.assets).toHaveLength(1))
 
@@ -74,7 +86,7 @@ describe('usePortfolioData', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     mocks.getStablecoinUsdRates.mockRejectedValue(new mocks.StablecoinUsdRatesUnavailableError('Rate provider unavailable'))
 
-    const { result } = renderHook(() => usePortfolioData())
+    const { result } = renderHook(() => usePortfolioData('user-1'), { wrapper: createQueryWrapper() })
 
     await waitFor(() => expect(result.current.error).toBe('Rate provider unavailable'))
 
@@ -85,12 +97,23 @@ describe('usePortfolioData', () => {
   it('uses the mock portfolio without requesting a live rate in development mock mode', async () => {
     vi.stubEnv('VITE_USE_MOCK_PORTFOLIO', 'true')
 
-    const { result } = renderHook(() => usePortfolioData())
+    const { result } = renderHook(() => usePortfolioData('user-1'), { wrapper: createQueryWrapper() })
 
     await waitFor(() => expect(result.current.loading).toBe(false))
 
     expect(result.current.assets.length).toBeGreaterThan(0)
     expect(result.current.stablecoinUsdRates).toBeNull()
     expect(mocks.getStablecoinUsdRates).not.toHaveBeenCalled()
+  })
+
+  it('reuses fresh portfolio data after the hook remounts', async () => {
+    const wrapper = createQueryWrapper()
+    const first = renderHook(() => usePortfolioData('user-1'), { wrapper })
+    await waitFor(() => expect(first.result.current.assets).toHaveLength(1))
+    first.unmount()
+
+    const second = renderHook(() => usePortfolioData('user-1'), { wrapper })
+    expect(second.result.current.assets).toHaveLength(1)
+    expect(mocks.getPortfolioBalances).toHaveBeenCalledOnce()
   })
 })

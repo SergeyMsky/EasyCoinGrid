@@ -4,7 +4,7 @@ import { PortfolioSummary } from '@/features/portfolio/components/PortfolioSumma
 import { PortfolioTable } from '@/features/portfolio/components/PortfolioTable'
 import { usePortfolioData } from '@/features/portfolio/hooks/usePortfolioData'
 import { NoConnectionState } from '@/features/portfolio/components/NoConnectionState'
-import { FALLBACK_RATES, getExchangeRates } from '@/features/portfolio/api/exchange-rates.api'
+import { useExchangeRates } from '@/features/portfolio/hooks/useExchangeRates'
 import { WarningMessage } from '@/shared/components/WarningMessage'
 import { PortfolioErrorState } from '@/features/portfolio/components/PortfolioErrorState'
 import { enrichAsset, sortAssets } from '@/features/portfolio/utils/portfolio.calculations'
@@ -25,6 +25,7 @@ const SpotPortfolioPerformance = lazy(() =>
 
 type DashboardProps = {
   currency: Currency
+  userId: string
 }
 
 function getStoredView(): FilterOption {
@@ -32,10 +33,11 @@ function getStoredView(): FilterOption {
   return VIEW_OPTIONS.includes(storedView as FilterOption) ? (storedView as FilterOption) : 'all'
 }
 
-export function Dashboard({ currency }: DashboardProps) {
+export function Dashboard({ currency, userId }: DashboardProps) {
   const {
     assets,
     loading,
+    refreshing,
     error,
     refreshPortfolio,
     lastUpdated,
@@ -43,47 +45,31 @@ export function Dashboard({ currency }: DashboardProps) {
     isBinanceConnected,
     stablecoinUsdRates,
     stablecoinRatesUpdatedAt,
-  } = usePortfolioData()
-  const { rotations, loading: rotationsLoading, error: rotationsError } = useSpotRotations({ assets: [], syncFromBinance: false })
+  } = usePortfolioData(userId)
+  const {
+    rotations,
+    loading: rotationsLoading,
+    error: rotationsError,
+  } = useSpotRotations({
+    userId,
+    assets: [],
+    syncFromBinance: false,
+  })
   const [sortBy, setSortBy] = useState<SortOption>('Total')
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc')
   const [search, setSearch] = useState('')
   const [view, setView] = useState<FilterOption>(getStoredView())
-  const [rates, setRates] = useState<Record<Currency, number>>(FALLBACK_RATES)
+  const { rates } = useExchangeRates(userId)
   const currentRate = rates[currency] ?? 1
   const canValuePortfolio = !loading && assets.length > 0 && assets.every((asset) => Number.isFinite(asset.price) && asset.price > 0)
   const currentValueUsd = canValuePortfolio
     ? assets.reduce((total, asset) => total + (Number(asset.free) + Number(asset.locked)) * asset.price, 0)
     : null
-  const portfolioHistory = useSpotPortfolioHistory(currentValueUsd, isBinanceConnected === true)
+  const portfolioHistory = useSpotPortfolioHistory(currentValueUsd, isBinanceConnected === true, userId)
 
   useEffect(() => {
     localStorage.setItem('view', view)
   }, [view])
-
-  useEffect(() => {
-    let isActive = true
-
-    getExchangeRates()
-      .then((data) => {
-        if (!isActive) return
-
-        setRates({
-          ...FALLBACK_RATES,
-          ...data.rates,
-          USD: 1,
-        })
-      })
-      .catch(() => {
-        if (isActive) {
-          setRates(FALLBACK_RATES)
-        }
-      })
-
-    return () => {
-      isActive = false
-    }
-  }, [])
 
   const handleSort = (value: SortOption) => {
     if (value === sortBy) {
@@ -132,7 +118,7 @@ export function Dashboard({ currency }: DashboardProps) {
   }, [filteredAssets, view])
 
   return (
-    <section className="mx-auto px-4 py-10">
+    <section className="mx-auto px-4 pt-10 pb-4">
       <div>
         <p className="label mb-2 text-accent">Binance Spot</p>
         <h1 className="text-3xl font-bold">Portfolio overview</h1>
@@ -140,12 +126,13 @@ export function Dashboard({ currency }: DashboardProps) {
       </div>
 
       <ErrorMessage message={rotationsError} />
-      {!loading && error ? (
-        <PortfolioErrorState onRetry={refreshPortfolio} loading={loading} message={`${error} Please try again.`} />
+      {!loading && error && assets.length === 0 ? (
+        <PortfolioErrorState onRetry={refreshPortfolio} loading={refreshing} message={`${error} Please try again.`} />
       ) : !loading && isBinanceConnected === false ? (
         <NoConnectionState />
       ) : (
         <>
+          {error && assets.length > 0 && <WarningMessage message={`${error} Showing the last loaded portfolio data.`} />}
           {binanceUnavailable && <WarningMessage message="Binance is temporarily unavailable. Please try again later." />}
           <PortfolioSummary assets={displayAssets} loading={loading} currency={currency} />
           {stablecoinUsdRates && stablecoinRatesUpdatedAt && (
@@ -205,6 +192,7 @@ export function Dashboard({ currency }: DashboardProps) {
             view={view}
             refreshPortfolio={refreshPortfolio}
             loading={loading}
+            refreshing={refreshing}
             lastUpdated={lastUpdated}
             currency={currency}
           />

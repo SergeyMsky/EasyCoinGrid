@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { SettingsPage } from './SettingsPage'
 
@@ -30,10 +31,13 @@ vi.mock('@/services/avatar', () => ({
 }))
 
 function renderSettings(initialEntry = '/settings') {
+  const queryClient = new QueryClient()
   return render(
-    <MemoryRouter initialEntries={[initialEntry]}>
-      <SettingsPage userEmail="user@example.com" session={null} avatarUrl={null} setAvatarUrl={vi.fn()} />
-    </MemoryRouter>,
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter initialEntries={[initialEntry]}>
+        <SettingsPage userEmail="user@example.com" session={null} avatarUrl={null} setAvatarUrl={vi.fn()} />
+      </MemoryRouter>
+    </QueryClientProvider>,
   )
 }
 

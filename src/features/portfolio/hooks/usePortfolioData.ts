@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import {
   BinanceNotConnectedError,
   BinanceUnavailableError,
@@ -10,136 +11,134 @@ import {
 import { getStablecoinUsdRates, StablecoinUsdRatesUnavailableError } from '../api/usdt-usd-rate.api'
 import type { Asset } from '@/features/portfolio/portfolio.types'
 import { mockPortfolio } from '../portfolio.mock'
+import { portfolioQueryKeys } from '../api/portfolio-query-keys'
 
-export function usePortfolioData() {
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [binanceUnavailable, setBinanceUnavailable] = useState(false)
-  const [assets, setAssets] = useState<Asset[]>([])
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
-  const [isBinanceConnected, setIsBinanceConnected] = useState<boolean | null>(null)
-  const [stablecoinUsdRates, setStablecoinUsdRates] = useState<{ USDT: number; USDC: number } | null>(null)
-  const [stablecoinRatesUpdatedAt, setStablecoinRatesUpdatedAt] = useState<string | null>(null)
+type PortfolioData = {
+  assets: Asset[]
+  lastUpdated: Date | null
+  binanceUnavailable: boolean
+  isBinanceConnected: boolean | null
+  stablecoinUsdRates: { USDT: number; USDC: number } | null
+  stablecoinRatesUpdatedAt: string | null
+}
 
-  const loadPortfolio = useCallback(async () => {
+const PORTFOLIO_STALE_TIME = 5 * 60 * 1000
+const PORTFOLIO_REFRESH_INTERVAL = 5 * 60 * 1000
+
+async function loadPortfolio(): Promise<PortfolioData> {
+  try {
+    // mock portfolio data
+    const useMockPortfolio = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_PORTFOLIO === 'true'
+
+    if (useMockPortfolio) {
+      return {
+        assets: mockPortfolio,
+        lastUpdated: new Date(),
+        binanceUnavailable: false,
+        isBinanceConnected: null,
+        stablecoinUsdRates: null,
+        stablecoinRatesUpdatedAt: null,
+      }
+    }
+    // mock portfolio data
+
+    const balances = await getPortfolioBalances()
+    const currentStablecoinRates = await getStablecoinUsdRates()
+
+    let metadata: Record<string, { name: string; image: string | null }> = {}
+
     try {
-      setLoading(true)
-      setError(null)
-      setBinanceUnavailable(false)
-
-      // mock portfolio data
-      const useMockPortfolio = import.meta.env.DEV && import.meta.env.VITE_USE_MOCK_PORTFOLIO === 'true'
-
-      if (useMockPortfolio) {
-        setIsBinanceConnected(null)
-        setAssets(mockPortfolio)
-        setLastUpdated(new Date())
-        return
-      }
-      // mock portfolio data
-
-      const balances = await getPortfolioBalances()
-      setIsBinanceConnected(true)
-      const currentStablecoinRates = await getStablecoinUsdRates()
-      setStablecoinUsdRates(currentStablecoinRates.rates)
-      setStablecoinRatesUpdatedAt(currentStablecoinRates.updatedAt)
-
-      let metadata: Record<string, { name: string; image: string | null }> = {}
-
-      try {
-        metadata = await getCoinsMetadata(balances.map((asset) => asset.asset))
-      } catch (metaError) {
-        console.warn('Coin metadata unavailable:', metaError)
-      }
-
-      const portfolioAssets = await Promise.all(
-        balances.map(async (asset) => {
-          const [priceResult, avgBuyResult] = await Promise.allSettled([getBinancePrice(asset.asset), getBinanceAvgBuy(asset.asset)])
-          const quoteUsdRate =
-            asset.asset === 'USDC' || asset.asset === 'LDUSDC' ? currentStablecoinRates.rates.USDC : currentStablecoinRates.rates.USDT
-          const price = priceResult.status === 'fulfilled' ? priceResult.value.price * quoteUsdRate : 0
-          const change24h = priceResult.status === 'fulfilled' ? priceResult.value.change24h * quoteUsdRate : 0
-          const avgBuy = avgBuyResult.status === 'fulfilled' ? avgBuyResult.value.avgBuy : null
-          const change24hPercent = priceResult.status === 'fulfilled' ? Number(priceResult.value.change24hPercent) : 0
-
-          if (priceResult.status === 'rejected') {
-            console.warn(`Price unavailable for ${asset.asset}`, priceResult.reason)
-
-            if (priceResult.reason instanceof BinanceUnavailableError) {
-              setBinanceUnavailable(true)
-            }
-          }
-
-          if (avgBuyResult.status === 'rejected') {
-            console.warn(`Average buy price unavailable for ${asset.asset}`, avgBuyResult.reason)
-          }
-
-          return {
-            ...asset,
-            price,
-            avgBuy,
-            change24h,
-            change24hPercent,
-            name: metadata[asset.asset]?.name ?? asset.asset,
-            image: metadata[asset.asset]?.image ?? null,
-          }
-        }),
-      )
-
-      setAssets(portfolioAssets)
-      setLastUpdated(new Date())
-    } catch (loadError) {
-      if (loadError instanceof BinanceNotConnectedError) {
-        setIsBinanceConnected(false)
-        setAssets([])
-        setError(null)
-        setBinanceUnavailable(false)
-        setLastUpdated(null)
-        setStablecoinUsdRates(null)
-        setStablecoinRatesUpdatedAt(null)
-        return
-      }
-      console.error('Failed to load portfolio:', loadError)
-      setError(loadError instanceof StablecoinUsdRatesUnavailableError ? loadError.message : 'Unable to load your portfolio.')
-    } finally {
-      setLoading(false)
+      metadata = await getCoinsMetadata(balances.map((asset) => asset.asset))
+    } catch (metaError) {
+      console.warn('Coin metadata unavailable:', metaError)
     }
-  }, [])
 
-  useEffect(() => {
-    let active = true
+    let binanceUnavailable = false
+    const portfolioAssets = await Promise.all(
+      balances.map(async (asset) => {
+        const [priceResult, avgBuyResult] = await Promise.allSettled([getBinancePrice(asset.asset), getBinanceAvgBuy(asset.asset)])
+        const quoteUsdRate =
+          asset.asset === 'USDC' || asset.asset === 'LDUSDC' ? currentStablecoinRates.rates.USDC : currentStablecoinRates.rates.USDT
+        const price = priceResult.status === 'fulfilled' ? priceResult.value.price * quoteUsdRate : 0
+        const change24h = priceResult.status === 'fulfilled' ? priceResult.value.change24h * quoteUsdRate : 0
+        const avgBuy = avgBuyResult.status === 'fulfilled' ? avgBuyResult.value.avgBuy : null
+        const change24hPercent = priceResult.status === 'fulfilled' ? Number(priceResult.value.change24hPercent) : 0
 
-    queueMicrotask(() => {
-      if (active) {
-        void loadPortfolio()
-      }
-    })
+        if (priceResult.status === 'rejected') {
+          console.warn(`Price unavailable for ${asset.asset}`, priceResult.reason)
 
-    const intervalId = setInterval(
-      () => {
-        void loadPortfolio()
-      },
-      5 * 60 * 1000,
+          if (priceResult.reason instanceof BinanceUnavailableError) {
+            binanceUnavailable = true
+          }
+        }
+
+        if (avgBuyResult.status === 'rejected') {
+          console.warn(`Average buy price unavailable for ${asset.asset}`, avgBuyResult.reason)
+        }
+
+        return {
+          ...asset,
+          price,
+          avgBuy,
+          change24h,
+          change24hPercent,
+          name: metadata[asset.asset]?.name ?? asset.asset,
+          image: metadata[asset.asset]?.image ?? null,
+        }
+      }),
     )
-    return () => {
-      active = false
-      clearInterval(intervalId)
-    }
-  }, [loadPortfolio])
 
+    return {
+      assets: portfolioAssets,
+      lastUpdated: new Date(),
+      binanceUnavailable,
+      isBinanceConnected: true,
+      stablecoinUsdRates: currentStablecoinRates.rates,
+      stablecoinRatesUpdatedAt: currentStablecoinRates.updatedAt,
+    }
+  } catch (loadError) {
+    if (loadError instanceof BinanceNotConnectedError) {
+      return {
+        assets: [],
+        lastUpdated: null,
+        binanceUnavailable: false,
+        isBinanceConnected: false,
+        stablecoinUsdRates: null,
+        stablecoinRatesUpdatedAt: null,
+      }
+    }
+
+    throw loadError
+  }
+}
+
+export function usePortfolioData(userId: string) {
+  const query = useQuery({
+    queryKey: portfolioQueryKeys.portfolio(userId),
+    queryFn: loadPortfolio,
+    enabled: Boolean(userId),
+    staleTime: PORTFOLIO_STALE_TIME,
+    gcTime: 60 * 60 * 1000,
+    refetchInterval: PORTFOLIO_REFRESH_INTERVAL,
+    refetchIntervalInBackground: false,
+  })
+  const { refetch } = query
   const refreshPortfolio = useCallback(() => {
-    void loadPortfolio()
-  }, [loadPortfolio])
+    void refetch()
+  }, [refetch])
+  const queryError = query.error
+  const error = queryError instanceof StablecoinUsdRatesUnavailableError ? queryError.message : queryError ? 'Unable to load your portfolio.' : null
 
   return {
-    assets,
-    loading,
+    assets: query.data?.assets ?? [],
+    loading: query.isPending,
+    refreshing: query.isFetching,
     error,
     refreshPortfolio,
-    lastUpdated,
-    binanceUnavailable,
-    isBinanceConnected,
-    stablecoinUsdRates,
-    stablecoinRatesUpdatedAt,
+    lastUpdated: query.data?.lastUpdated ?? null,
+    binanceUnavailable: query.data?.binanceUnavailable ?? false,
+    isBinanceConnected: query.data?.isBinanceConnected ?? null,
+    stablecoinUsdRates: query.data?.stablecoinUsdRates ?? null,
+    stablecoinRatesUpdatedAt: query.data?.stablecoinRatesUpdatedAt ?? null,
   }
 }

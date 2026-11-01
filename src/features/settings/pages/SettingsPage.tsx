@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { AlertCircle, Camera, CheckCircle2, Eye, EyeOff, Network, ShieldCheck, UserRound, type LucideIcon } from 'lucide-react'
 import {
   connectBinance,
@@ -17,6 +18,7 @@ import { Spinner } from '@/shared/components/Spinner'
 import { Button } from '@/shared/components/Button'
 import type { Session } from '@supabase/supabase-js'
 import { getAvatarUrl, uploadAvatar } from '@/services/avatar'
+import { portfolioQueryKeys } from '@/features/portfolio/api/portfolio-query-keys'
 
 type SettingsTab = 'account' | 'security' | 'exchanges'
 
@@ -34,6 +36,7 @@ type SettingsProps = {
 }
 
 export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: SettingsProps) {
+  const queryClient = useQueryClient()
   const profilePhotoInputRef = useRef<HTMLInputElement>(null)
   const [avatarLoading, setAvatarLoading] = useState(false)
   const [avatarError, setAvatarError] = useState<string | null>(null)
@@ -221,6 +224,9 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
       setApiSecret('')
       setConnectionSuccess('Binance connected successfully.')
       setIsBinanceConnected(true)
+      if (session?.user.id) {
+        await queryClient.invalidateQueries({ queryKey: portfolioQueryKeys.user(session.user.id) })
+      }
     } catch (error) {
       setConnectionError(error instanceof Error ? error.message : 'Failed to connect Binance.')
     } finally {
@@ -245,6 +251,9 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
       setApiSecret('')
       setConnectionSuccess('Binance disconnected successfully.')
       setIsBinanceConnected(false)
+      if (session?.user.id) {
+        await queryClient.invalidateQueries({ queryKey: portfolioQueryKeys.user(session.user.id) })
+      }
       return true
     } catch (error) {
       setConnectionError(error instanceof Error ? error.message : 'Failed to disconnect Binance.')

@@ -1,6 +1,8 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { ReactNode } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SpotRotation } from '@/features/portfolio/portfolio.types'
 import { formatCurrency } from '@/shared/utils/format-currency'
@@ -22,6 +24,7 @@ vi.mock('@/features/portfolio/hooks/useSpotRotations', () => ({
 }))
 
 vi.mock('@/features/portfolio/api/portfolio.api', () => ({
+  getCachedCoinImage: () => null,
   getCoinsMetadata: mocks.getCoinsMetadata,
 }))
 
@@ -60,6 +63,15 @@ const rotation: SpotRotation = {
   match_type: 'MANUAL',
 }
 
+function renderRotationsPage(page: ReactNode) {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>{page}</MemoryRouter>
+    </QueryClientProvider>,
+  )
+}
+
 describe('RotationsPage', () => {
   beforeEach(() => {
     mocks.getCoinsMetadata.mockResolvedValue({})
@@ -89,11 +101,7 @@ describe('RotationsPage', () => {
     mocks.getCoinsMetadata.mockResolvedValueOnce({
       BTC: { name: 'Bitcoin', image: 'https://example.com/btc.png' },
     })
-    render(
-      <MemoryRouter initialEntries={['/rotations']}>
-        <RotationsPage currency="EUR" />
-      </MemoryRouter>,
-    )
+    renderRotationsPage(<RotationsPage currency="EUR" userId="user-1" />)
 
     expect(screen.getByRole('tablist', { name: 'Spot rotation views' })).toBeInTheDocument()
     expect(screen.getByRole('tab', { name: /Open orders 1/ })).toHaveAttribute('aria-selected', 'true')
@@ -117,14 +125,10 @@ describe('RotationsPage', () => {
     expect(screen.queryByRole('heading', { name: 'Open rotations' })).not.toBeInTheDocument()
   })
 
-  it('enables automatic synchronization only for a connected Binance account', () => {
-    render(
-      <MemoryRouter>
-        <RotationsPage currency="USD" />
-      </MemoryRouter>,
-    )
+  it('enables manual Binance synchronization only for a connected account', () => {
+    renderRotationsPage(<RotationsPage currency="USD" userId="user-1" />)
 
-    expect(mocks.useSpotRotations).toHaveBeenLastCalledWith({ assets: [], syncFromBinance: false })
+    expect(mocks.useSpotRotations).toHaveBeenLastCalledWith({ userId: 'user-1', assets: [], syncFromBinance: false })
   })
 
   it('shows a table skeleton while rotations are loading', async () => {
@@ -140,11 +144,7 @@ describe('RotationsPage', () => {
       closeRotation: vi.fn(),
     })
 
-    render(
-      <MemoryRouter>
-        <RotationsPage currency="USD" />
-      </MemoryRouter>,
-    )
+    renderRotationsPage(<RotationsPage currency="USD" userId="user-1" />)
 
     const overview = screen.getByRole('region', { name: 'Rotation overview' })
     expect(overview).toHaveAttribute('aria-busy', 'true')
@@ -182,11 +182,7 @@ describe('RotationsPage', () => {
       closeRotation: vi.fn(),
     })
 
-    render(
-      <MemoryRouter>
-        <RotationsPage currency="USD" />
-      </MemoryRouter>,
-    )
+    renderRotationsPage(<RotationsPage currency="USD" userId="user-1" />)
 
     await user.click(screen.getByRole('button', { name: 'Refresh rotations' }))
     expect(syncNow).toHaveBeenCalledOnce()

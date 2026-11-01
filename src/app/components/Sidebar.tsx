@@ -39,7 +39,7 @@ export function Sidebar({ mobileOpen, onNavigate }: SidebarProps) {
                       isActive ? 'bg-accent text-on-accent' : 'text-muted hover:bg-surface-raised hover:text-text'
                     }`
                   }>
-                  <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+                  <Icon className="h-4.5 w-4.5 shrink-0" aria-hidden="true" />
                   {label}
                 </NavLink>
               </li>

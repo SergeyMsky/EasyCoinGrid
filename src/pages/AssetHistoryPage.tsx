@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowDownLeft, ArrowLeftRight, ArrowUpRight, RefreshCw } from 'lucide-react'
 import { getAssetTransactions, syncAssetTransactions } from '@/features/asset-history/api/asset-history.api'
 import type { AssetHistorySyncResult, AssetTransaction } from '@/features/asset-history/asset-history.types'
@@ -10,7 +11,10 @@ import { ErrorMessage } from '@/shared/components/ErrorMessage'
 import { WarningMessage } from '@/shared/components/WarningMessage'
 import { APP_LOCALE } from '@/shared/utils/locale'
 import { CoinImage } from '@/features/portfolio/components/CoinImage'
+import { portfolioQueryKeys } from '@/features/portfolio/api/portfolio-query-keys'
 
+const TRANSACTION_PAGE_SIZE = 100
+const TRANSACTION_STALE_TIME = 5 * 60 * 1000
 const dateTimeFormatter = new Intl.DateTimeFormat(APP_LOCALE, { dateStyle: 'medium', timeStyle: 'short' })
 const dateHeadingFormatter = new Intl.DateTimeFormat(APP_LOCALE, { day: '2-digit', month: 'short', year: 'numeric' })
 const timeFormatter = new Intl.DateTimeFormat(APP_LOCALE, { hour: '2-digit', minute: '2-digit' })
@@ -71,107 +75,144 @@ function TransactionIcon({ transaction }: { transaction: AssetTransaction }) {
   return <ArrowLeftRight className="h-4 w-4 text-accent" aria-hidden="true" />
 }
 
-export function AssetHistoryPage() {
+export function AssetHistoryPage({ userId }: { userId: string }) {
   const loadMoreRef = useRef<HTMLDivElement>(null)
-  const loadingMoreRef = useRef(false)
-  const [transactions, setTransactions] = useState<AssetTransaction[]>([])
-  const [hasMore, setHasMore] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [loadingMore, setLoadingMore] = useState(false)
-  const [syncing, setSyncing] = useState(false)
-  const [connected, setConnected] = useState<boolean | null>(null)
-  const [error, setError] = useState<string | null>(null)
+  const isMountedRef = useRef(false)
+  const assetMetadataRef = useRef<Record<string, Pick<Asset, 'image'>>>({})
+  const metadataRequestsRef = useRef(new Set<string>())
+  const metadataAttemptsRef = useRef(new Map<string, number>())
+  const queryClient = useQueryClient()
   const [syncResult, setSyncResult] = useState<AssetHistorySyncResult | null>(null)
   const [assetMetadata, setAssetMetadata] = useState<Record<string, Pick<Asset, 'image'>>>({})
-  const transactionAssetsKey = useMemo(() => [...new Set(transactions.map(({ asset }) => asset.toUpperCase()))].sort().join(','), [transactions])
+  const [loadingImageAssets, setLoadingImageAssets] = useState<Set<string>>(() => new Set())
+  const transactionsQuery = useInfiniteQuery({
+    queryKey: portfolioQueryKeys.assetTransactions(userId),
+    queryFn: ({ pageParam }) => getAssetTransactions(pageParam),
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, pages) => (lastPage.length === TRANSACTION_PAGE_SIZE ? pages.length * TRANSACTION_PAGE_SIZE : undefined),
+    enabled: Boolean(userId),
+    staleTime: TRANSACTION_STALE_TIME,
+    gcTime: 60 * 60 * 1000,
+  })
+  const connectionQuery = useQuery({
+    queryKey: portfolioQueryKeys.binanceConnection(userId),
+    queryFn: getBinanceConnectionStatus,
+    enabled: Boolean(userId),
+    staleTime: TRANSACTION_STALE_TIME,
+    gcTime: 60 * 60 * 1000,
+  })
+  const syncMutation = useMutation({
+    mutationFn: async () => {
+      const balances = await getPortfolioBalances()
+      return syncAssetTransactions(balances.map(({ asset }) => asset))
+    },
+    onSuccess: async (result) => {
+      setSyncResult(result)
+      await queryClient.resetQueries({ queryKey: portfolioQueryKeys.assetTransactions(userId), exact: true })
+    },
+  })
+  const transactions = useMemo(() => transactionsQuery.data?.pages.flat() ?? [], [transactionsQuery.data])
+  const loading = transactionsQuery.isPending
+  const loadingMore = transactionsQuery.isFetchingNextPage
+  const hasMore = Boolean(transactionsQuery.hasNextPage)
+  const connected = connectionQuery.data ?? null
+  const error = transactionsQuery.error ?? connectionQuery.error ?? syncMutation.error
+  const errorMessage = error instanceof Error ? error.message : error ? 'Failed to load asset history.' : null
+  const transactionAssetsKey = useMemo(
+    () =>
+      [
+        ...new Set(
+          transactions.flatMap(({ asset, fee_asset, related_asset }) =>
+            [asset, fee_asset, related_asset].filter((value): value is string => Boolean(value)).map((value) => value.toUpperCase()),
+          ),
+        ),
+      ]
+        .sort()
+        .join(','),
+    [transactions],
+  )
+
+  useEffect(() => {
+    isMountedRef.current = true
+
+    return () => {
+      isMountedRef.current = false
+    }
+  }, [])
 
   useEffect(() => {
     if (!transactionAssetsKey) return
 
-    let active = true
-    void getCoinsMetadata(transactionAssetsKey.split(','))
-      .then((metadata) => {
-        if (active) setAssetMetadata((current) => ({ ...current, ...metadata }))
-      })
-      .catch((metadataError: unknown) => {
-        if (active) console.warn('Asset history coin images unavailable:', metadataError)
-      })
+    const assetsToLoad = transactionAssetsKey.split(',').filter((asset) => {
+      const attempts = metadataAttemptsRef.current.get(asset) ?? 0
+      return !assetMetadataRef.current[asset]?.image && !metadataRequestsRef.current.has(asset) && attempts < 3
+    })
+    if (assetsToLoad.length === 0) return
 
-    return () => {
-      active = false
-    }
+    for (const asset of assetsToLoad) metadataRequestsRef.current.add(asset)
+    setLoadingImageAssets((current) => new Set([...current, ...assetsToLoad]))
+
+    void (async () => {
+      let pendingAssets = assetsToLoad
+      let lastError: unknown
+
+      try {
+        for (let attempt = 0; attempt < 3 && pendingAssets.length > 0; attempt += 1) {
+          for (const asset of pendingAssets) {
+            metadataAttemptsRef.current.set(asset, (metadataAttemptsRef.current.get(asset) ?? 0) + 1)
+          }
+
+          try {
+            const metadata = await getCoinsMetadata(pendingAssets)
+            assetMetadataRef.current = { ...assetMetadataRef.current, ...metadata }
+            if (isMountedRef.current) setAssetMetadata((current) => ({ ...current, ...metadata }))
+          } catch (metadataError) {
+            lastError = metadataError
+          }
+
+          if (!isMountedRef.current) break
+          pendingAssets = pendingAssets.filter((asset) => !assetMetadataRef.current[asset]?.image)
+          if (pendingAssets.length > 0 && attempt < 2) {
+            await new Promise((resolve) => window.setTimeout(resolve, 300 * 2 ** attempt))
+          }
+        }
+
+        if (pendingAssets.length > 0) {
+          console.warn(
+            lastError ? 'Asset history coin images unavailable after retries:' : 'No coin image was returned after retries:',
+            lastError ?? pendingAssets,
+          )
+        }
+      } finally {
+        for (const asset of assetsToLoad) metadataRequestsRef.current.delete(asset)
+        if (isMountedRef.current) {
+          setLoadingImageAssets((current) => {
+            const next = new Set(current)
+            for (const asset of assetsToLoad) next.delete(asset)
+            return next
+          })
+        }
+      }
+    })()
   }, [transactionAssetsKey])
 
-  useEffect(() => {
-    let active = true
-
-    void getAssetTransactions(0)
-      .then((items) => {
-        if (active) {
-          setTransactions(items)
-          setHasMore(items.length === 100)
-        }
-      })
-      .catch((loadError: unknown) => {
-        if (active) setError(loadError instanceof Error ? loadError.message : 'Failed to load asset history.')
-      })
-      .finally(() => {
-        if (active) setLoading(false)
-      })
-
-    void getBinanceConnectionStatus()
-      .then((isConnected) => {
-        if (active) setConnected(isConnected)
-      })
-      .catch((connectionError: unknown) => {
-        if (active) setError(connectionError instanceof Error ? connectionError.message : 'Failed to load Binance connection status.')
-      })
-
-    return () => {
-      active = false
-    }
-  }, [])
-
   async function handleSync() {
-    setSyncing(true)
-    setError(null)
-
     try {
-      const balances = await getPortfolioBalances()
-      const result = await syncAssetTransactions(balances.map(({ asset }) => asset))
-      setSyncResult(result)
-      const items = await getAssetTransactions(0)
-      setTransactions(items)
-      setHasMore(items.length === 100)
-    } catch (syncError) {
-      setError(syncError instanceof Error ? syncError.message : 'Failed to sync Binance asset history.')
-    } finally {
-      setSyncing(false)
+      await syncMutation.mutateAsync()
+    } catch {
+      // The mutation error is surfaced in the page state.
     }
   }
 
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = transactionsQuery
   const handleLoadMore = useCallback(async () => {
-    if (loadingMoreRef.current || !hasMore) return
-
-    loadingMoreRef.current = true
-    setLoadingMore(true)
-    setError(null)
-
-    try {
-      const items = await getAssetTransactions(transactions.length)
-      setTransactions((current) => [...current, ...items])
-      setHasMore(items.length === 100)
-    } catch (loadError) {
-      setError(loadError instanceof Error ? loadError.message : 'Failed to load more asset history.')
-    } finally {
-      loadingMoreRef.current = false
-      setLoadingMore(false)
-    }
-  }, [hasMore, transactions.length])
+    if (!hasNextPage || isFetchingNextPage) return
+    await fetchNextPage()
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage])
 
   useEffect(() => {
     const target = loadMoreRef.current
-    if (!target || loading || !hasMore || typeof IntersectionObserver === 'undefined') return
+    if (!target || loading || !hasMore || loadingMore || typeof IntersectionObserver === 'undefined') return
 
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -182,10 +223,10 @@ export function AssetHistoryPage() {
 
     observer.observe(target)
     return () => observer.disconnect()
-  }, [handleLoadMore, hasMore, loading])
+  }, [handleLoadMore, hasMore, loading, loadingMore])
 
   return (
-    <main className="mx-auto px-4 py-10">
+    <main className="mx-auto px-4 pt-10 pb-4">
       <div className="flex flex-wrap items-end justify-between gap-5">
         <div>
           <p className="label mb-2 text-accent">Binance account</p>
@@ -194,14 +235,19 @@ export function AssetHistoryPage() {
             Review Spot trades, deposits, withdrawals, wallet transfers, Simple Earn activity and Convert trades.
           </p>
         </div>
-        <Button type="button" variant="dashboard" onClick={() => void handleSync()} disabled={!connected || syncing || loading} className="gap-2">
-          <RefreshCw className={`h-4 w-4 ${syncing ? 'animate-spin' : ''}`} aria-hidden="true" />
-          {syncing ? 'Syncing…' : 'Sync now'}
+        <Button
+          type="button"
+          variant="dashboard"
+          onClick={() => void handleSync()}
+          disabled={!connected || syncMutation.isPending || loading}
+          className="gap-2">
+          <RefreshCw className={`h-4 w-4 ${syncMutation.isPending ? 'animate-spin' : ''}`} aria-hidden="true" />
+          {syncMutation.isPending ? 'Syncing…' : 'Sync now'}
         </Button>
       </div>
 
       {!loading && connected === false && <WarningMessage message="Connect Binance in Settings to import asset history." />}
-      {error && <ErrorMessage message={error} />}
+      {errorMessage && <ErrorMessage message={errorMessage} />}
 
       {syncResult && (
         <p className="mt-4 text-sm text-muted" role="status">
@@ -219,7 +265,7 @@ export function AssetHistoryPage() {
         </p>
       )}
 
-      <section className="ui-surface mt-4 overflow-hidden" aria-busy={loading || loadingMore || syncing}>
+      <section className="ui-surface mt-4 overflow-hidden" aria-busy={loading || loadingMore || syncMutation.isPending}>
         <div className="flex min-h-13.75 items-center justify-between border-b border-outline px-4 py-3">
           <h2 className="text-sm font-semibold">Transactions</h2>
           <span className="text-xs text-muted">{transactions.length} shown</span>
@@ -311,13 +357,26 @@ export function AssetHistoryPage() {
                           <span className="flex items-center justify-end gap-2">
                             {transaction.direction === 'IN' ? '+' : transaction.direction === 'OUT' ? '−' : ''}
                             {formatAmount(transaction.amount, transaction.asset)}
-                            <CoinImage image={assetMetadata[transaction.asset]?.image} asset={transaction.asset} />
+                            <CoinImage
+                              image={assetMetadata[transaction.asset]?.image}
+                              asset={transaction.asset}
+                              loading={loadingImageAssets.has(transaction.asset)}
+                            />
                           </span>
                         </td>
                         <td className="px-3 py-2 text-right text-muted">
-                          {Number(transaction.fee_amount) > 0
-                            ? formatAmount(transaction.fee_amount, transaction.fee_asset ?? transaction.asset)
-                            : '—'}
+                          {Number(transaction.fee_amount) > 0 ? (
+                            <span className="flex items-center justify-end gap-2">
+                              {formatAmount(transaction.fee_amount, transaction.fee_asset ?? transaction.asset)}
+                              <CoinImage
+                                image={assetMetadata[transaction.fee_asset ?? transaction.asset]?.image}
+                                asset={transaction.fee_asset ?? transaction.asset}
+                                loading={loadingImageAssets.has(transaction.fee_asset ?? transaction.asset)}
+                              />
+                            </span>
+                          ) : (
+                            '—'
+                          )}
                         </td>
                         <td className="px-3 py-2 text-right text-muted">{timeFormatter.format(new Date(transaction.occurred_at))}</td>
                         <td className="px-3 py-2 text-right">
