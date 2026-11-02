@@ -2,7 +2,7 @@ import { formatNumber, formatPrice } from '@/shared/utils/format-number'
 import { formatSignedValue } from '@/shared/utils/format-signed-value'
 import { type AssetDisplay, type Currency, type FilterOption, type SortDirection, type SortOption } from '@/features/portfolio/portfolio.types'
 import { formatCurrency, formatSignedCurrency, formatUnitPrice } from '@/shared/utils/format-currency'
-import { PortfolioSearch } from './PortfolioSearch'
+import { SearchInput } from '@/shared/components/SearchInput'
 import { CoinImage } from './CoinImage'
 import { exportAssetsToCsv } from '@/shared/utils/export-csv'
 import { Download, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react'
@@ -104,11 +104,11 @@ export function PortfolioTable({
           ))}
         </div>
         <div className="flex w-full items-center justify-between gap-2 sm:justify-end">
-          <PortfolioSearch value={search} onChange={onSearchChange} />
+          <SearchInput value={search} onChange={onSearchChange} placeholder="Search in Your Assets" ariaLabel="Search assets" className="max-w-3xs" />
           <div className="flex items-center gap-2">
             <Button type="button" variant="dashboard" aria-label="Export" onClick={() => exportAssetsToCsv(assets)} className="gap-1">
-              <Download className="h-5 w-5" />
-              <span className="text-xs font-medium">Export</span>
+              <Download className="h-4 w-4" />
+              <span className="font-medium">Export</span>
             </Button>
             <Button
               type="button"
@@ -117,8 +117,8 @@ export function PortfolioTable({
               onClick={refreshPortfolio}
               disabled={loading || refreshing}
               className="gap-1">
-              <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin text-text' : ''}`} />
-              <span className="text-xs font-medium">{refreshing ? 'Refreshing…' : 'Refresh'}</span>
+              <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin text-text' : ''}`} />
+              <span className="font-medium">{refreshing ? 'Refreshing…' : 'Refresh'}</span>
             </Button>
           </div>
         </div>
@@ -166,7 +166,7 @@ export function PortfolioTable({
           ) : assets.length === 0 ? (
             <tbody>
               <tr>
-                <td className="px-5 py-6 text-center text-xl" colSpan={7}>
+                <td className="px-3 py-10 text-center text-sm text-muted" colSpan={7}>
                   Nothing found
                 </td>
               </tr>

@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getAssetTransactions, syncAssetTransactions } from '@/features/asset-history/api/asset-history.api'
-import type { AssetHistorySyncResult } from '@/features/asset-history/asset-history.types'
+import type { AssetHistoryDateRange, AssetHistorySyncResult, AssetHistoryTypeFilter } from '@/features/asset-history/asset-history.types'
 import { AssetHistorySyncPanel } from '@/features/asset-history/components/AssetHistorySyncPanel'
 import { AssetHistoryTransactionsTable } from '@/features/asset-history/components/AssetHistoryTransactionsTable'
 import { getPortfolioBalances } from '@/features/portfolio/api/portfolio.api'
@@ -14,9 +14,23 @@ const TRANSACTION_STALE_TIME = 5 * 60 * 1000
 export function AssetHistoryPage({ userId }: { userId: string }) {
   const queryClient = useQueryClient()
   const [syncResult, setSyncResult] = useState<AssetHistorySyncResult | null>(null)
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [typeFilter, setTypeFilter] = useState<AssetHistoryTypeFilter>('all')
+  const [dateRange, setDateRange] = useState<AssetHistoryDateRange>({ from: '', to: '' })
+  const hasFilters = Boolean(debouncedSearch || typeFilter !== 'all' || dateRange.from || dateRange.to)
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedSearch(search.trim()), 250)
+    return () => window.clearTimeout(timeout)
+  }, [search])
+
   const transactionsQuery = useInfiniteQuery({
-    queryKey: portfolioQueryKeys.assetTransactions(userId),
-    queryFn: ({ pageParam }) => getAssetTransactions(pageParam),
+    queryKey: portfolioQueryKeys.assetTransactions(
+      userId,
+      hasFilters ? { search: debouncedSearch, type: typeFilter, from: dateRange.from, to: dateRange.to } : undefined,
+    ),
+    queryFn: ({ pageParam }) =>
+      hasFilters ? getAssetTransactions(pageParam, { search: debouncedSearch, type: typeFilter, dateRange }) : getAssetTransactions(pageParam),
     initialPageParam: 0,
     getNextPageParam: (lastPage, pages) => (lastPage.length === TRANSACTION_PAGE_SIZE ? pages.length * TRANSACTION_PAGE_SIZE : undefined),
     enabled: Boolean(userId),
@@ -37,7 +51,7 @@ export function AssetHistoryPage({ userId }: { userId: string }) {
     },
     onSuccess: async (result) => {
       setSyncResult(result)
-      await queryClient.resetQueries({ queryKey: portfolioQueryKeys.assetTransactions(userId), exact: true })
+      await queryClient.resetQueries({ queryKey: portfolioQueryKeys.assetTransactions(userId), exact: false })
     },
   })
   const transactions = useMemo(() => transactionsQuery.data?.pages.flat() ?? [], [transactionsQuery.data])
@@ -79,6 +93,13 @@ export function AssetHistoryPage({ userId }: { userId: string }) {
         syncing={syncMutation.isPending}
         hasMore={hasMore}
         connected={connected}
+        search={search}
+        typeFilter={typeFilter}
+        dateRange={dateRange}
+        hasFilters={hasFilters}
+        onSearchChange={setSearch}
+        onTypeFilterChange={setTypeFilter}
+        onDateRangeChange={setDateRange}
         onLoadMore={handleLoadMore}
       />
 

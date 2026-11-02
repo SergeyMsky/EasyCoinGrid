@@ -20,6 +20,9 @@ export type AssetTransaction = {
   created_at: string
 }
 
+export type AssetHistoryTypeFilter = 'all' | 'spot' | 'deposit' | 'withdrawal' | 'transfer' | 'earn' | 'convert'
+export type AssetHistoryDateRange = { from: string; to: string }
+
 export type AssetHistorySyncResult = {
   syncedAt: string
   depositsImported: number

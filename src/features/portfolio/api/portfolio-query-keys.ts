@@ -6,6 +6,9 @@ export const portfolioQueryKeys = {
   rotationMetadata: (userId: string, assets: string[]) => [...portfolioQueryKeys.user(userId), 'coin-metadata', [...assets].sort()] as const,
   exchangeRates: (userId: string) => [...portfolioQueryKeys.user(userId), 'exchange-rates'] as const,
   history: (userId: string) => [...portfolioQueryKeys.user(userId), 'history'] as const,
-  assetTransactions: (userId: string) => [...portfolioQueryKeys.user(userId), 'asset-transactions'] as const,
+  assetTransactions: (userId: string, filters?: { search: string; type: string; from: string; to: string }) =>
+    filters
+      ? ([...portfolioQueryKeys.user(userId), 'asset-transactions', filters] as const)
+      : ([...portfolioQueryKeys.user(userId), 'asset-transactions'] as const),
   binanceConnection: (userId: string) => [...portfolioQueryKeys.user(userId), 'binance-connection'] as const,
 }

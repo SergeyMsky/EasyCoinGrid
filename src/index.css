@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&display=swap');
+@import 'react-day-picker/style.css';
 @import 'tailwindcss';
 
 :root {
@@ -93,4 +94,57 @@
   .input:disabled {
     @apply cursor-not-allowed border-outline bg-surface-raised text-muted;
   }
+}
+
+.asset-history-calendar {
+  --rdp-accent-color: var(--color-accent);
+  --rdp-accent-background-color: var(--color-accent-subtle);
+  --rdp-day-width: 1.75rem;
+  --rdp-day-height: 1.75rem;
+  --rdp-day_button-width: 1.55rem;
+  --rdp-day_button-height: 1.55rem;
+  --rdp-nav-height: 2.5rem;
+  --rdp-months-gap: 0.5rem;
+  --rdp-weekday-opacity: 1;
+  --rdp-outside-opacity: 0.35;
+
+  color: var(--color-text);
+  font-size: 0.75rem;
+}
+
+.asset-history-calendar .rdp-month_caption {
+  @apply text-sm text-text;
+}
+
+.asset-history-calendar .rdp-month + .rdp-month {
+  @apply border-l border-outline pl-2;
+}
+
+.asset-history-calendar .rdp-weekday {
+  @apply text-muted uppercase;
+}
+
+.asset-history-calendar .rdp-selected {
+  @apply font-normal;
+  font-size: inherit !important;
+}
+
+.asset-history-calendar .rdp-day_button {
+  @apply rounded-md;
+}
+
+.asset-history-calendar .rdp-day_button:hover:not(:disabled) {
+  @apply bg-outline;
+}
+
+.asset-history-calendar .rdp-today:not(.rdp-selected) .rdp-day_button {
+  @apply text-accent;
+}
+
+.asset-history-calendar .rdp-chevron {
+  @apply h-4 w-4;
+}
+
+.asset-history-calendar .rdp-months {
+  @apply flex-row flex-nowrap;
 }

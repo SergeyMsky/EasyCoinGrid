@@ -1,14 +1,55 @@
 import { supabase } from '@/shared/lib/supabase'
-import type { AssetHistorySyncResult, AssetTransaction } from '../asset-history.types'
+import type { AssetHistoryDateRange, AssetHistorySyncResult, AssetHistoryTypeFilter, AssetTransaction } from '../asset-history.types'
 
 const PAGE_SIZE = 100
 
-export async function getAssetTransactions(offset: number): Promise<AssetTransaction[]> {
-  const { data, error } = await supabase
+const eventTypesByFilter: Partial<Record<AssetHistoryTypeFilter, AssetTransaction['event_type'][]>> = {
+  spot: ['SPOT_TRADE', 'SPOT_TRADE_FEE'],
+  deposit: ['DEPOSIT'],
+  withdrawal: ['WITHDRAWAL'],
+  transfer: ['TRANSFER'],
+  earn: ['EARN_SUBSCRIPTION', 'EARN_REDEMPTION', 'EARN_REWARD'],
+  convert: ['CONVERT'],
+}
+
+function normalizeAssetSearch(value: string) {
+  const search = value
+    .normalize('NFKC')
+    .replace(/[^\p{L}\p{N} -]/gu, '')
+    .trim()
+
+  return search ? [search] : []
+}
+
+export async function getAssetTransactions(
+  offset: number,
+  filters?: { search: string; type: AssetHistoryTypeFilter; dateRange: AssetHistoryDateRange },
+): Promise<AssetTransaction[]> {
+  let query = supabase
     .from('asset_transactions')
     .select(
       'id, source, external_id, group_id, event_type, direction, asset, related_asset, amount, fee_amount, fee_asset, occurred_at, status, network, transaction_id, source_wallet, target_wallet, created_at',
     )
+
+  const searchTerms = filters ? normalizeAssetSearch(filters.search) : []
+  if (searchTerms.length > 0) {
+    const searchFilters = searchTerms.flatMap((search) => [`asset.ilike.%${search}%`, `related_asset.ilike.%${search}%`])
+    query = query.or(searchFilters.join(','))
+  }
+
+  const eventTypes = filters ? eventTypesByFilter[filters.type] : undefined
+  if (eventTypes) query = query.in('event_type', eventTypes)
+
+  if (filters?.dateRange.from) {
+    const [year, month, day] = filters.dateRange.from.split('-').map(Number)
+    query = query.gte('occurred_at', new Date(year, month - 1, day).toISOString())
+  }
+  if (filters?.dateRange.to) {
+    const [year, month, day] = filters.dateRange.to.split('-').map(Number)
+    query = query.lt('occurred_at', new Date(year, month - 1, day + 1).toISOString())
+  }
+
+  const { data, error } = await query
     .order('occurred_at', { ascending: false })
     .order('id', { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1)
