@@ -43,6 +43,7 @@ export type SpotRotation = {
   buy_time: string | null
   buy_price: number
   buy_qty: number
+  invested_amount: number | null
   status: SpotRotationStatus
   sell_order_id: string | null
   sell_trade_id: string | null
@@ -65,15 +66,30 @@ export type CloseRotationInput = {
   realizedPnlPercent: number
 }
 
-export type CreateSpotRotationInput = {
+type CreateSpotRotationBaseInput = {
   symbol: string
   buyPrice: number
   buyQty: number
+  investedAmountUsd: number
   feeAmountUsd: number
   buyOrderId?: string
   buyTradeId?: string
   buyTime: string
 }
+
+export type CreateSpotRotationInput = CreateSpotRotationBaseInput &
+  (
+    | {
+        sellPrice: number
+        sellFeeAmountUsd: number
+        sellTime: string
+      }
+    | {
+        sellPrice?: never
+        sellFeeAmountUsd?: never
+        sellTime?: never
+      }
+  )
 
 export type SpotPortfolioSnapshot = {
   id: string

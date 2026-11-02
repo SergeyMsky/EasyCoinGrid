@@ -16,6 +16,7 @@ const rotation: SpotRotation = {
   buy_time: '2026-10-29T12:00:00.000Z',
   buy_price: 100,
   buy_qty: 2,
+  invested_amount: null,
   status: 'OPEN',
   sell_order_id: null,
   sell_trade_id: null,

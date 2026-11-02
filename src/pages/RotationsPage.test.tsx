@@ -1,191 +1,107 @@
-import { render, screen, waitFor, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import type { ReactNode } from 'react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { SpotRotation } from '@/features/portfolio/portfolio.types'
-import { formatCurrency } from '@/shared/utils/format-currency'
+import { formatCurrency, formatSignedCurrency } from '@/shared/utils/format-currency'
 import { RotationsPage } from './RotationsPage'
 
 const mocks = vi.hoisted(() => ({
-  usePortfolioData: vi.fn(),
   useSpotRotations: vi.fn(),
-  getCoinsMetadata: vi.fn(),
-  getExchangeRates: vi.fn(),
-}))
-
-vi.mock('@/features/portfolio/hooks/usePortfolioData', () => ({
-  usePortfolioData: mocks.usePortfolioData,
+  useExchangeRates: vi.fn(),
+  removeRotation: vi.fn(),
 }))
 
 vi.mock('@/features/portfolio/hooks/useSpotRotations', () => ({
   useSpotRotations: mocks.useSpotRotations,
 }))
 
-vi.mock('@/features/portfolio/api/portfolio.api', () => ({
-  getCachedCoinImage: () => null,
-  getCoinsMetadata: mocks.getCoinsMetadata,
+vi.mock('@/features/portfolio/hooks/useExchangeRates', () => ({
+  useExchangeRates: mocks.useExchangeRates,
 }))
 
-vi.mock('@/features/portfolio/api/exchange-rates.api', () => ({
-  FALLBACK_RATES: {
-    USD: 1,
-    EUR: 0.92,
-    GBP: 0.79,
-    JPY: 144.5,
-    CHF: 0.91,
-    CAD: 1.34,
-    AUD: 1.49,
-    UAH: 36.92,
-  },
-  getExchangeRates: mocks.getExchangeRates,
-}))
-
-const rotation: SpotRotation = {
-  id: 'rotation-1',
+const closedDeal: SpotRotation = {
+  id: 'deal-1',
   user_id: 'user-1',
-  symbol: 'BTCUSDT',
-  buy_order_id: 'buy-1',
-  buy_trade_id: 'buy-trade-1',
+  symbol: 'DOT/USDT',
+  buy_order_id: null,
+  buy_trade_id: null,
   buy_time: '2026-10-29T12:00:00.000Z',
-  buy_price: 100,
-  buy_qty: 1,
-  status: 'OPEN',
+  buy_price: 6.712,
+  buy_qty: 7.42,
+  invested_amount: 50,
+  status: 'CLOSED',
   sell_order_id: null,
   sell_trade_id: null,
-  sell_time: null,
-  sell_price: null,
-  sold_qty: 0,
+  sell_time: '2026-10-30T12:00:00.000Z',
+  sell_price: 7.525,
+  sold_qty: 7.42,
   fee_amount: 0,
-  realized_pnl_usd: null,
-  realized_pnl_percent: null,
+  realized_pnl_usd: 6.03246,
+  realized_pnl_percent: 12.11,
   match_type: 'MANUAL',
-}
-
-function renderRotationsPage(page: ReactNode) {
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter>{page}</MemoryRouter>
-    </QueryClientProvider>,
-  )
 }
 
 describe('RotationsPage', () => {
   beforeEach(() => {
-    mocks.getCoinsMetadata.mockResolvedValue({})
-    mocks.getExchangeRates.mockResolvedValue({
-      rates: { USD: 1, EUR: 2, GBP: 0.79, JPY: 144.5, CHF: 0.91, CAD: 1.34, AUD: 1.49, UAH: 36.92 },
-    })
-    mocks.usePortfolioData.mockReturnValue({
-      assets: [],
-      loading: false,
-      error: null,
-      isBinanceConnected: false,
-    })
-    mocks.useSpotRotations.mockReturnValue({
-      rotations: [rotation],
-      loading: false,
-      syncing: false,
-      error: null,
-      syncStatus: null,
-      syncNow: vi.fn(),
-      addRotation: vi.fn(),
-      closeRotation: vi.fn(),
-    })
-  })
-
-  it('shows open orders and switches to closed trade history using tabs', async () => {
-    const user = userEvent.setup()
-    mocks.getCoinsMetadata.mockResolvedValueOnce({
-      BTC: { name: 'Bitcoin', image: 'https://example.com/btc.png' },
-    })
-    renderRotationsPage(<RotationsPage currency="EUR" userId="user-1" />)
-
-    expect(screen.getByRole('tablist', { name: 'Spot rotation views' })).toBeInTheDocument()
-    expect(screen.getByRole('tab', { name: /Open orders 1/ })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('heading', { name: 'Open rotations' })).toBeInTheDocument()
-    expect(screen.getByText('All amounts in EUR')).toBeInTheDocument()
-    expect(screen.getByRole('columnheader', { name: 'Buy price (EUR)' })).toBeInTheDocument()
-    const buyPriceCell = within(screen.getAllByRole('row')[1]).getAllByRole('cell')[2]
-    await waitFor(() => {
-      expect(buyPriceCell.textContent).toBe(formatCurrency(200, 'EUR'))
-    })
-    await waitFor(() => {
-      expect(mocks.getCoinsMetadata).toHaveBeenCalledWith(['BTC'])
-      expect(screen.getByRole('img', { name: 'BTC' })).toHaveAttribute('src', 'https://example.com/btc.png')
-    })
-    expect(screen.getByText('Bitcoin')).toBeInTheDocument()
-
-    await user.click(screen.getByRole('tab', { name: /Closed trades 0/ }))
-
-    expect(screen.getByRole('tab', { name: /Closed trades 0/ })).toHaveAttribute('aria-selected', 'true')
-    expect(screen.getByRole('heading', { name: 'Closed history' })).toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Open rotations' })).not.toBeInTheDocument()
-  })
-
-  it('enables manual Binance synchronization only for a connected account', () => {
-    renderRotationsPage(<RotationsPage currency="USD" userId="user-1" />)
-
-    expect(mocks.useSpotRotations).toHaveBeenLastCalledWith({ userId: 'user-1', assets: [], syncFromBinance: false })
-  })
-
-  it('shows a table skeleton while rotations are loading', async () => {
-    const user = userEvent.setup()
     mocks.useSpotRotations.mockReturnValue({
       rotations: [],
       loading: true,
-      syncing: false,
       error: null,
-      syncStatus: null,
-      syncNow: vi.fn(),
       addRotation: vi.fn(),
       closeRotation: vi.fn(),
+      removeRotation: mocks.removeRotation,
+      deleting: false,
     })
-
-    renderRotationsPage(<RotationsPage currency="USD" userId="user-1" />)
-
-    const overview = screen.getByRole('region', { name: 'Rotation overview' })
-    expect(overview).toHaveAttribute('aria-busy', 'true')
-    expect(within(overview).getByText('Open rotations')).toBeInTheDocument()
-    expect(within(overview).getByText('Closed rotations')).toBeInTheDocument()
-    expect(within(overview).getByText('Realized PnL')).toBeInTheDocument()
-    expect(screen.getByRole('tablist', { name: 'Spot rotation views' })).toBeInTheDocument()
-    expect(screen.getByRole('table', { name: 'Loading open rotations' })).toBeInTheDocument()
-    expect(screen.getAllByRole('row')).toHaveLength(6)
-    expect(screen.queryByText('Loading your rotations…')).not.toBeInTheDocument()
-
-    await user.click(screen.getByRole('tab', { name: /Closed trades/ }))
-
-    expect(screen.getByRole('table', { name: 'Loading closed rotations' })).toBeInTheDocument()
-    expect(screen.getAllByRole('columnheader')).toHaveLength(8)
+    mocks.useExchangeRates.mockReturnValue({ rates: { USD: 1 } })
   })
 
-  it('offers a manual retry when Binance is connected but no sync has succeeded yet', async () => {
-    const user = userEvent.setup()
-    const syncNow = vi.fn()
-    mocks.usePortfolioData.mockReturnValue({
-      assets: [],
-      loading: false,
-      error: null,
-      isBinanceConnected: true,
-    })
+  it('renders the spot journal heading and summary while loading', () => {
+    render(<RotationsPage currency="USD" userId="user-1" />)
+
+    expect(screen.getByRole('heading', { name: 'Spot trade journal', level: 1 })).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Rotation overview' })).toHaveAttribute('aria-busy', 'true')
+  })
+
+  it('shows manual deal fields and converts monetary values to the selected currency', () => {
     mocks.useSpotRotations.mockReturnValue({
-      rotations: [],
+      rotations: [closedDeal, { ...closedDeal, id: 'auto-deal', symbol: 'BTC/USDT', match_type: 'AUTO_API' }],
       loading: false,
-      syncing: false,
       error: null,
-      syncStatus: null,
-      syncNow,
       addRotation: vi.fn(),
       closeRotation: vi.fn(),
+      removeRotation: mocks.removeRotation,
+      deleting: false,
+    })
+    mocks.useExchangeRates.mockReturnValue({ rates: { USD: 1, EUR: 2 } })
+
+    render(<RotationsPage currency="EUR" userId="user-1" />)
+
+    expect(screen.getByRole('region', { name: 'Manual spot deals' })).toHaveAttribute('aria-busy', 'false')
+    expect(screen.getByRole('columnheader', { name: 'Invested (EUR)' })).toBeInTheDocument()
+    expect(screen.getByText('DOT/USDT')).toBeInTheDocument()
+    expect(screen.getByText(formatCurrency(100, 'EUR'))).toBeInTheDocument()
+    expect(screen.getAllByText(formatSignedCurrency(6.03246 * 2, 'EUR'))).toHaveLength(2)
+    expect(screen.queryByText('BTC/USDT')).not.toBeInTheDocument()
+  })
+
+  it('requires confirmation before deleting a deal', async () => {
+    mocks.removeRotation.mockResolvedValue(undefined)
+    mocks.useSpotRotations.mockReturnValue({
+      rotations: [closedDeal],
+      loading: false,
+      error: null,
+      addRotation: vi.fn(),
+      closeRotation: vi.fn(),
+      removeRotation: mocks.removeRotation,
+      deleting: false,
     })
 
-    renderRotationsPage(<RotationsPage currency="USD" userId="user-1" />)
+    render(<RotationsPage currency="USD" userId="user-1" />)
 
-    await user.click(screen.getByRole('button', { name: 'Refresh rotations' }))
-    expect(syncNow).toHaveBeenCalledOnce()
-    expect(screen.getByText('No successful sync yet')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Delete DOT/USDT deal' }))
+    expect(screen.getByRole('heading', { name: 'Delete this spot deal?' })).toBeInTheDocument()
+    expect(mocks.removeRotation).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete deal' }))
+    await waitFor(() => expect(mocks.removeRotation).toHaveBeenCalledWith(closedDeal))
   })
 })

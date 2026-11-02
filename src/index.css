@@ -96,7 +96,7 @@
   }
 }
 
-.asset-history-calendar {
+.rdp-root {
   --rdp-accent-color: var(--color-accent);
   --rdp-accent-background-color: var(--color-accent-subtle);
   --rdp-day-width: 1.75rem;
@@ -112,39 +112,43 @@
   font-size: 0.75rem;
 }
 
-.asset-history-calendar .rdp-month_caption {
+.rdp-root .rdp-month_caption {
   @apply text-sm text-text;
 }
 
-.asset-history-calendar .rdp-month + .rdp-month {
+.rdp-root .rdp-month + .rdp-month {
   @apply border-l border-outline pl-2;
 }
 
-.asset-history-calendar .rdp-weekday {
+.rdp-root .rdp-weekday {
   @apply text-muted uppercase;
 }
 
-.asset-history-calendar .rdp-selected {
+.rdp-root .rdp-selected {
   @apply font-normal;
   font-size: inherit !important;
 }
 
-.asset-history-calendar .rdp-day_button {
+.rdp-root .rdp-day_button {
   @apply rounded-md;
 }
 
-.asset-history-calendar .rdp-day_button:hover:not(:disabled) {
+.rdp-root .rdp-day_button:hover:not(:disabled) {
   @apply bg-outline;
 }
 
-.asset-history-calendar .rdp-today:not(.rdp-selected) .rdp-day_button {
+.rdp-root .rdp-today:not(.rdp-selected) .rdp-day_button {
   @apply text-accent;
 }
 
-.asset-history-calendar .rdp-chevron {
+.rdp-root .rdp-chevron {
   @apply h-4 w-4;
 }
 
-.asset-history-calendar .rdp-months {
+.rdp-root .rdp-months {
   @apply flex-row flex-nowrap;
+}
+
+.rdp-root .rdp-selected:not(.rdp-range_middle) .rdp-day_button {
+  @apply bg-accent text-text;
 }

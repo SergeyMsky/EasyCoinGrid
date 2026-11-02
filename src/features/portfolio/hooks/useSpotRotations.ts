@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { CloseRotationInput, CreateSpotRotationInput, SpotRotation } from '@/features/portfolio/portfolio.types'
-import { closeSpotRotation, createSpotRotation, getSpotRotations } from '@/features/portfolio/api/spot-rotations.api'
+import { closeSpotRotation, createSpotRotation, deleteSpotRotation, getSpotRotations } from '@/features/portfolio/api/spot-rotations.api'
 import { syncBinanceSpotRotations, type SpotRotationSyncStatus } from '@/features/portfolio/api/binance-spot-trades.api'
 import { getSpotRotationBaseAsset } from '@/features/portfolio/utils/spot-rotation-symbol'
 import { portfolioQueryKeys } from '@/features/portfolio/api/portfolio-query-keys'
@@ -69,6 +69,11 @@ export function useSpotRotations({ userId, assets, syncFromBinance }: UseSpotRot
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   })
 
+  const deleteMutation = useMutation({
+    mutationFn: deleteSpotRotation,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  })
+
   const refreshRotations = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey })
   }, [queryClient, queryKey])
@@ -96,7 +101,14 @@ export function useSpotRotations({ userId, assets, syncFromBinance }: UseSpotRot
     [closeMutation],
   )
 
-  const error = rotationsQuery.error ?? syncMutation.error
+  const removeRotation = useCallback(
+    async (rotation: SpotRotation) => {
+      await deleteMutation.mutateAsync(rotation.id)
+    },
+    [deleteMutation],
+  )
+
+  const error = rotationsQuery.error ?? syncMutation.error ?? deleteMutation.error
 
   return {
     rotations: rotationsQuery.data ?? [],
@@ -108,5 +120,7 @@ export function useSpotRotations({ userId, assets, syncFromBinance }: UseSpotRot
     refreshRotations,
     addRotation,
     closeRotation,
+    removeRotation,
+    deleting: deleteMutation.isPending,
   }
 }

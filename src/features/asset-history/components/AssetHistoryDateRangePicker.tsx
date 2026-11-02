@@ -168,7 +168,6 @@ export function AssetHistoryDateRangePicker({ value, onChange }: AssetHistoryDat
             navLayout="around"
             weekStartsOn={1}
             showOutsideDays
-            className="asset-history-calendar"
           />
         </div>
       )}

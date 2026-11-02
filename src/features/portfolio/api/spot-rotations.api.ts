@@ -1,5 +1,6 @@
 import { supabase } from '@/shared/lib/supabase'
 import type { CloseRotationInput, CreateSpotRotationInput, SpotRotation } from '@/features/portfolio/portfolio.types'
+import { calculateNetRealizedPnl } from '@/features/portfolio/utils/rotationMatching'
 
 export async function getSpotRotations(): Promise<SpotRotation[]> {
   const { data, error } = await supabase.from('spot_rotations').select('*').order('created_at', { ascending: false })
@@ -24,6 +25,17 @@ export async function createSpotRotation(input: CreateSpotRotationInput): Promis
     throw new Error('Sign in before creating a spot rotation.')
   }
 
+  const closedInput = input.sellPrice !== undefined ? input : null
+  const totalFeeUsd = input.feeAmountUsd + (closedInput?.sellFeeAmountUsd ?? 0)
+  const realized = closedInput
+    ? calculateNetRealizedPnl({
+        buyPrice: input.buyPrice,
+        soldQty: input.buyQty,
+        sellPrice: closedInput.sellPrice,
+        feeAmountUsd: totalFeeUsd,
+      })
+    : null
+
   const { error } = await supabase.from('spot_rotations').insert({
     user_id: user.id,
     symbol: input.symbol,
@@ -32,15 +44,16 @@ export async function createSpotRotation(input: CreateSpotRotationInput): Promis
     buy_time: input.buyTime,
     buy_price: input.buyPrice,
     buy_qty: input.buyQty,
-    status: 'OPEN',
+    invested_amount: input.investedAmountUsd,
+    status: closedInput ? 'CLOSED' : 'OPEN',
     sell_order_id: null,
     sell_trade_id: null,
-    sell_time: null,
-    sell_price: null,
-    sold_qty: 0,
-    fee_amount: input.feeAmountUsd,
-    realized_pnl_usd: null,
-    realized_pnl_percent: null,
+    sell_time: closedInput?.sellTime ?? null,
+    sell_price: closedInput?.sellPrice ?? null,
+    sold_qty: closedInput ? input.buyQty : 0,
+    fee_amount: totalFeeUsd,
+    realized_pnl_usd: realized?.realizedPnlUsd ?? null,
+    realized_pnl_percent: realized?.realizedPnlPercent ?? null,
     match_type: 'MANUAL',
   })
 
@@ -61,5 +74,16 @@ export async function closeSpotRotation(rotationId: string, input: CloseRotation
 
   if (error) {
     throw new Error(`Unable to close spot rotation: ${error.message}`)
+  }
+}
+
+export async function deleteSpotRotation(rotationId: string): Promise<void> {
+  const { data, error } = await supabase.from('spot_rotations').delete().eq('id', rotationId).eq('match_type', 'MANUAL').select('id')
+
+  if (error) {
+    throw new Error(`Unable to delete spot deal: ${error.message}`)
+  }
+  if (!data.length) {
+    throw new Error('This spot deal could not be found or cannot be deleted.')
   }
 }
