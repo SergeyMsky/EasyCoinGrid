@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
   deleteSpotRotation: vi.fn(),
   getSpotRotations: vi.fn(),
   syncBinanceSpotRotations: vi.fn(),
+  updateSpotRotation: vi.fn(),
 }))
 
 vi.mock('@/features/portfolio/api/spot-rotations.api', () => ({
@@ -18,6 +19,7 @@ vi.mock('@/features/portfolio/api/spot-rotations.api', () => ({
   createSpotRotation: mocks.createSpotRotation,
   deleteSpotRotation: mocks.deleteSpotRotation,
   getSpotRotations: mocks.getSpotRotations,
+  updateSpotRotation: mocks.updateSpotRotation,
 }))
 
 vi.mock('@/features/portfolio/api/binance-spot-trades.api', () => ({
@@ -39,6 +41,7 @@ describe('useSpotRotations', () => {
     vi.clearAllMocks()
     mocks.getSpotRotations.mockResolvedValue([])
     mocks.deleteSpotRotation.mockResolvedValue(undefined)
+    mocks.updateSpotRotation.mockResolvedValue(undefined)
     mocks.syncBinanceSpotRotations.mockResolvedValue({
       syncedAt: '2026-10-31T12:00:00.000Z',
       symbolsScanned: 1,
@@ -90,6 +93,8 @@ describe('useSpotRotations', () => {
       id: 'deal-1',
       user_id: 'user-1',
       symbol: 'DOT/USDT',
+      coinpaprika_id: null,
+      coingecko_id: null,
       buy_order_id: null,
       buy_trade_id: null,
       buy_time: '2026-10-29T12:00:00.000Z',
@@ -112,5 +117,51 @@ describe('useSpotRotations', () => {
 
     expect(mocks.deleteSpotRotation).toHaveBeenCalledWith('deal-1', expect.anything())
     expect(hook.result.current.deleting).toBe(false)
+  })
+
+  it('updates a manual deal and invalidates the cached rotations', async () => {
+    const queryClient = createQueryClient()
+    const wrapper = createWrapper(queryClient)
+    const hook = renderHook(() => useSpotRotations({ userId: 'user-1', assets: [], syncFromBinance: false }), { wrapper })
+
+    await waitFor(() => expect(hook.result.current.loading).toBe(false))
+    const rotation = {
+      id: 'deal-1',
+      user_id: 'user-1',
+      symbol: 'DOT/USDT',
+      coinpaprika_id: null,
+      coingecko_id: null,
+      buy_order_id: null,
+      buy_trade_id: null,
+      buy_time: '2026-10-29T12:00:00.000Z',
+      buy_price: 6.712,
+      buy_qty: 7.42,
+      invested_amount: 50,
+      status: 'OPEN' as const,
+      sell_order_id: null,
+      sell_trade_id: null,
+      sell_time: null,
+      sell_price: null,
+      sold_qty: 0,
+      fee_amount: 0,
+      realized_pnl_usd: null,
+      realized_pnl_percent: null,
+      match_type: 'MANUAL' as const,
+    }
+    const input = {
+      symbol: 'DOT/USDT',
+      coinGeckoId: null,
+      buyPrice: 7,
+      buyQty: 7,
+      investedAmountUsd: 49,
+      feeAmountUsd: 0,
+      buyTime: '2026-10-29T12:00:00.000Z',
+      status: 'OPEN' as const,
+    }
+
+    await act(async () => hook.result.current.editRotation(rotation, input))
+
+    expect(mocks.updateSpotRotation).toHaveBeenCalledWith(rotation, input)
+    expect(mocks.getSpotRotations).toHaveBeenCalledTimes(2)
   })
 })

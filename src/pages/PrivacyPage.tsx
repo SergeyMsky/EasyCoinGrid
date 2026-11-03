@@ -19,7 +19,7 @@ const sections = [
   {
     title: 'Service providers and external services',
     paragraphs: [
-      'Supabase provides authentication, database, file storage, and server-side functions. Binance receives authenticated requests to retrieve the account and market information needed for the app. Current USDT/USD and USDC/USD rates are obtained from Kraken; currency rates are obtained from Frankfurter; coin metadata is obtained from CoinGecko; currency flag images are loaded from FlagCDN.',
+      'Supabase provides authentication, database, file storage, and server-side functions. Binance receives authenticated requests to retrieve the account and market information needed for the app. Current USDT/USD and USDC/USD rates are obtained from Kraken; currency rates are obtained from Frankfurter; coin search, images, historical price estimates, and current open-deal price estimates are obtained from CoinGecko; currency flag images are loaded from FlagCDN.',
       'Binance credentials are encrypted server-side with AES-GCM before being stored. The encryption key is held as a server-side secret, not as a client-side app setting. Database access is scoped to the signed-in user by row-level security policies.',
     ],
   },

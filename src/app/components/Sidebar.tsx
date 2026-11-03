@@ -24,7 +24,7 @@ export function Sidebar({ mobileOpen, onNavigate }: SidebarProps) {
         />
       )}
       <aside
-        className={`fixed top-15.25 bottom-0 left-0 z-30 flex w-64 flex-col border-r border-outline bg-app px-4 pt-10 pb-4 transition-transform duration-300 lg:sticky lg:top-15.25 lg:z-0 lg:h-[calc(100vh-61px)] lg:w-60 lg:shrink-0 lg:translate-x-0 ${
+        className={`fixed top-15.25 bottom-0 left-0 z-30 flex w-64 flex-col border-r border-outline bg-app px-4 pt-10 pb-4 transition-transform duration-300 lg:sticky lg:top-15.25 lg:z-0 lg:h-[calc(100vh-62px)] lg:w-60 lg:shrink-0 lg:translate-x-0 ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         }`}>
         <nav aria-label="Main navigation" className="flex-1">

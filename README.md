@@ -149,7 +149,19 @@ Requirements: Node.js and npm. A Supabase project is required to use authenticat
 
 5. Open the local URL printed by Vite.
 
-E2E credentials are only needed to run Playwright tests. `BINANCE_ENCRYPTION_KEY` is only required for the Binance integration and must be configured as a Supabase Edge Function secret; it is not a client-side environment variable.
+E2E credentials are only needed to run Playwright tests. `BINANCE_ENCRYPTION_KEY` is only required for the Binance integration. `COINGECKO_DEMO_API_KEY` is used for coin search, historical price estimates, and current prices for open spot deals. Both must be configured as Supabase Edge Function secrets; neither is a client-side environment variable.
+
+To enable CoinGecko coin search and spot deal price estimates, apply pending migrations, add the free Demo API key to Supabase, and deploy the functions:
+
+```bash
+npx supabase db push
+npx supabase secrets set COINGECKO_DEMO_API_KEY=your-demo-api-key
+npx supabase functions deploy search-coingecko-coins
+npx supabase functions deploy get-coingecko-historical-price
+npx supabase functions deploy get-coingecko-current-prices
+```
+
+Historical estimates use the closest available USD market-price sample to the selected hour. CoinGecko Demo data is limited to the past 365 days; sample resolution varies by date and is not an exchange execution price. Current open-deal estimates refresh every minute, apply only to deals linked to a CoinGecko coin, and are not executable quotes.
 
 ## Environment Variables
 
@@ -161,8 +173,9 @@ E2E credentials are only needed to run Playwright tests. `BINANCE_ENCRYPTION_KEY
 | `E2E_EMAIL`               | Playwright               | Email for the E2E test account                             |
 | `E2E_PASSWORD`            | Playwright               | Password for the E2E test account                          |
 | `BINANCE_ENCRYPTION_KEY`  | Supabase Edge Functions  | Key used to encrypt and decrypt stored Binance credentials |
+| `COINGECKO_DEMO_API_KEY`  | Supabase Edge Functions  | CoinGecko Demo API key for coin search and price estimates |
 
-The application only enables mock portfolio data when running in Vite development mode and `VITE_USE_MOCK_PORTFOLIO` is exactly `true`. E2E credentials should be kept out of source control. Keep `BINANCE_ENCRYPTION_KEY` server-side; do not expose it through a client-side `VITE_` variable.
+The application only enables mock portfolio data when running in Vite development mode and `VITE_USE_MOCK_PORTFOLIO` is exactly `true`. E2E credentials should be kept out of source control. Keep `BINANCE_ENCRYPTION_KEY` and `COINGECKO_DEMO_API_KEY` server-side; do not expose them through client-side `VITE_` variables.
 
 ## Project Structure
 

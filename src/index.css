@@ -30,7 +30,7 @@
   --color-accent-subtle: #30231f;
   --color-accent-outline: #684337;
   --color-accent-disabled: #80685f;
-  --color-overlay: #0a0a0a;
+  --color-overlay: --alpha(var(--color-app) / 90%);
 
   --color-profit: #10b981;
   --color-profit-subtle: #102a22;
@@ -55,6 +55,17 @@
 
   body {
     @apply relative min-h-screen min-w-[320px] overflow-x-hidden bg-app font-space-grotesk text-text;
+  }
+
+  .input[type='number'] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+  }
+
+  .input[type='number']::-webkit-inner-spin-button,
+  .input[type='number']::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
   }
 
   ::selection {

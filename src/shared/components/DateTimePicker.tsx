@@ -68,7 +68,7 @@ export function DateTimePicker({ label, value, onChange, disabled = false, requi
               disabled={disabled}
               aria-label={`Choose ${controlLabel.toLowerCase()} date`}
               aria-haspopup="dialog"
-              className="input flex items-center justify-between gap-2 px-3 py-2 text-left disabled:cursor-not-allowed disabled:opacity-60">
+              className="input flex cursor-pointer items-center justify-between gap-2 px-3 py-2 text-left disabled:cursor-not-allowed disabled:opacity-60">
               <span className={selectedDate ? 'text-text' : 'text-muted'}>{formatDate(selectedDate)}</span>
               <CalendarDays className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
             </button>
@@ -142,7 +142,7 @@ function TimeSelect({
     <Select.Root value={value} onValueChange={onChange} disabled={disabled} required={required}>
       <Select.Trigger
         aria-label={label}
-        className="input flex min-w-0 items-center justify-between gap-1 px-2 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60">
+        className="input flex min-w-0 cursor-pointer items-center justify-between gap-1 px-2 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60">
         <Select.Value placeholder={placeholder} />
         <Select.Icon asChild>
           <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden="true" />
@@ -153,13 +153,13 @@ function TimeSelect({
           position="popper"
           sideOffset={4}
           align="start"
-          className="z-[70] max-h-56 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-outline bg-surface p-1 text-text shadow-lg">
+          className="z-70 max-h-56 min-w-(--radix-select-trigger-width) overflow-hidden rounded-lg border border-outline bg-surface p-1 text-text">
           <Select.Viewport className="max-h-52 overflow-y-auto">
             {values.map((option) => (
               <Select.Item
                 key={option}
                 value={option}
-                className="relative flex cursor-pointer items-center rounded-md py-1.5 pr-8 pl-3 text-sm outline-none select-none data-[highlighted]:bg-surface-raised data-[highlighted]:text-text">
+                className="relative flex cursor-pointer items-center rounded-md py-1.5 pr-8 pl-3 text-sm outline-none select-none data-highlighted:bg-surface-raised data-highlighted:text-text">
                 <Select.ItemText>{option}</Select.ItemText>
                 <Select.ItemIndicator className="absolute right-2 inline-flex items-center text-accent">
                   <Check className="h-4 w-4" aria-hidden="true" />

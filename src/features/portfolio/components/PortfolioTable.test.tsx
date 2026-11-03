@@ -119,4 +119,26 @@ describe('PortfolioTable', () => {
     expect(screen.getByText('Nothing found')).toBeInTheDocument()
     expect(screen.getByRole('table', { name: 'Portfolio assets' })).toBeInTheDocument()
   })
+
+  it('paginates dashboard assets', async () => {
+    const user = userEvent.setup()
+    const manyAssets = Array.from({ length: 12 }, (_, index) => ({
+      ...assets[0],
+      asset: `COIN${index}`,
+      name: `Coin ${index}`,
+    }))
+
+    render(<PortfolioTable {...defaultProps} assets={manyAssets} />)
+
+    expect(screen.getByText('COIN0')).toBeInTheDocument()
+    expect(screen.queryByText('COIN10')).not.toBeInTheDocument()
+    expect(screen.getByText('Showing 1–10 of 12')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Next page' }))
+
+    expect(screen.getByText('COIN10')).toBeInTheDocument()
+    expect(screen.getByText('COIN11')).toBeInTheDocument()
+    expect(screen.queryByText('COIN0')).not.toBeInTheDocument()
+    expect(screen.getByText('Showing 11–12 of 12')).toBeInTheDocument()
+  })
 })

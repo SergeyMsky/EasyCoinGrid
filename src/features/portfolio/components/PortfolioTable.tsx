@@ -8,6 +8,9 @@ import { exportAssetsToCsv } from '@/shared/utils/export-csv'
 import { Download, RefreshCw, TrendingDown, TrendingUp } from 'lucide-react'
 import { Button } from '@/shared/components/Button'
 import { Skeleton } from '@/shared/components/Skeleton'
+import { SortIndicator } from '@/shared/components/SortIndicator'
+import { TablePagination } from '@/shared/components/TablePagination'
+import { TABLE_PAGE_SIZE, useTablePagination } from '@/shared/hooks/useTablePagination'
 
 type PortfolioTableProps = {
   assets: AssetDisplay[]
@@ -89,22 +92,24 @@ export function PortfolioTable({
   lastUpdated,
   currency,
 }: PortfolioTableProps) {
+  const { currentPage, pageItems: pageAssets, onPageChange } = useTablePagination(assets, JSON.stringify([sortBy, sortDirection, search, view]))
+
   return (
-    <div className="rounded-xl bg-surface">
-      <div className="mt-4 flex flex-col items-start justify-between gap-4 rounded-t-xl border border-outline px-4 py-2 sm:flex-row sm:items-center">
+    <div className="ui-surface mt-4 overflow-hidden">
+      <div className="flex flex-col items-start justify-between gap-4 border-b border-outline px-4 py-2 sm:flex-row sm:items-center">
         <div className="ui-surface order-1 flex gap-1 bg-app p-1 sm:order-0">
           {filterButtons.map(({ label, value }) => (
             <button
               key={value}
               type="button"
               onClick={() => onFilterChange(value)}
-              className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-medium inset-shadow-[0_0_2px_0_rgb(0_0_0/100%)] transition ${view === value ? 'bg-accent text-on-accent' : 'text-text hover:bg-surface-raised hover:text-text'}`}>
+              className={`cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium inset-shadow-[0_0_2px_0_rgb(0_0_0/100%)] transition ${view === value ? 'bg-accent text-on-accent' : 'text-text hover:bg-surface-raised hover:text-text'}`}>
               {label}
             </button>
           ))}
         </div>
         <div className="flex w-full items-center justify-between gap-2 sm:justify-end">
-          <SearchInput value={search} onChange={onSearchChange} placeholder="Search in Your Assets" ariaLabel="Search assets" className="max-w-3xs" />
+          <SearchInput value={search} onChange={onSearchChange} placeholder="Search in Your Assets" ariaLabel="Search assets" />
           <div className="flex items-center gap-2">
             <Button type="button" variant="dashboard" aria-label="Export" onClick={() => exportAssetsToCsv(assets)} className="gap-1">
               <Download className="h-4 w-4" />
@@ -123,7 +128,7 @@ export function PortfolioTable({
           </div>
         </div>
       </div>
-      <div className="overflow-x-auto border-x border-outline">
+      <div className="overflow-x-auto">
         <table className="w-full min-w-225 table-fixed" aria-label={loading ? 'Loading portfolio' : 'Portfolio assets'}>
           <colgroup>
             <col className="w-[19.3%]" />
@@ -140,22 +145,7 @@ export function PortfolioTable({
                     onClick={() => handleSort(value)}
                     className={`label flex w-full cursor-pointer items-center justify-end gap-1 text-left normal-case transition hover:text-accent! ${className ?? ''}`}>
                     {label}
-                    <span className="flex flex-col gap-1 text-xs">
-                      <svg
-                        className={`w-1.5 ${sortBy === value && sortDirection === 'asc' ? 'text-accent' : 'text-muted'}`}
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="6 8 12 6"
-                        fill="currentColor">
-                        <path d="M12 8L18 14H6L12 8Z"></path>
-                      </svg>
-                      <svg
-                        className={`w-1.5 ${sortBy === value && sortDirection === 'desc' ? 'text-accent' : 'text-muted'}`}
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="6 10 12 6"
-                        fill="currentColor">
-                        <path d="M12 16L6 10H18L12 16Z"></path>
-                      </svg>
-                    </span>
+                    <SortIndicator active={sortBy === value} direction={sortDirection} />
                   </button>
                 </th>
               ))}
@@ -173,9 +163,9 @@ export function PortfolioTable({
             </tbody>
           ) : (
             <tbody className="divide-y divide-outline">
-              {assets.map((asset) => {
+              {pageAssets.map((asset) => {
                 return (
-                  <tr key={asset.asset} className="transition-colors hover:bg-surface-raised">
+                  <tr key={asset.asset}>
                     <td className="h-16.25 px-3 py-2 text-left">
                       <div className="flex items-center gap-3">
                         <CoinImage image={asset.image} asset={asset.asset} />
@@ -224,7 +214,8 @@ export function PortfolioTable({
           )}
         </table>
       </div>
-      <div className="w-full rounded-b-xl border border-outline px-3 py-2 text-right text-xs text-muted">
+      <TablePagination currentPage={currentPage} pageSize={TABLE_PAGE_SIZE} totalItems={assets.length} onPageChange={onPageChange} />
+      <div className="w-full border-t border-outline px-3 py-2 text-right text-xs text-muted">
         Last updated: <span className="text-muted">{lastUpdated ? lastUpdated.toLocaleTimeString() : '—'}</span>
       </div>
     </div>

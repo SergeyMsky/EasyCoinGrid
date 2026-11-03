@@ -38,7 +38,7 @@ function PublicRoute({ session, children }: { session: Session | null; children:
 
 function AppLayout({ children, navigationOpen, onNavigate }: { children: ReactNode; navigationOpen: boolean; onNavigate: () => void }) {
   return (
-    <div className="flex min-h-[calc(100vh-61px)]">
+    <div className="flex min-h-[calc(100vh-62px)]">
       <Sidebar mobileOpen={navigationOpen} onNavigate={onNavigate} />
       <main className="min-w-0 flex-1">{children}</main>
     </div>
@@ -117,7 +117,7 @@ function App() {
 
       <Suspense
         fallback={
-          <div className="flex min-h-[calc(100vh-61px)] items-center justify-center p-5">
+          <div className="flex min-h-[calc(100vh-62px)] items-center justify-center p-5">
             <Spinner className="size-10 border-6 border-outline border-t-accent" />
           </div>
         }>

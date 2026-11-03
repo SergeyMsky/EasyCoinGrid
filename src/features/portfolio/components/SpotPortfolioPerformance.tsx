@@ -135,7 +135,7 @@ export function SpotPortfolioPerformance({ snapshots, loading, error, enabled, a
                   type="button"
                   aria-pressed={period === option}
                   onClick={() => setPeriod(option)}
-                  className={`cursor-pointer rounded-lg px-3 py-1.5 text-xs font-medium inset-shadow-[0_0_2px_0_rgb(0_0_0/100%)] transition ${period === option ? 'bg-accent text-on-accent' : 'text-text hover:bg-surface-raised hover:text-text'}`}>
+                  className={`cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium inset-shadow-[0_0_2px_0_rgb(0_0_0/100%)] transition ${period === option ? 'bg-accent text-on-accent' : 'text-text hover:bg-surface-raised hover:text-text'}`}>
                   {option}
                 </button>
               ))}

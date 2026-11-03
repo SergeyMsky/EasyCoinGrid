@@ -11,6 +11,8 @@ const rotation: SpotRotation = {
   id: 'rotation-1',
   user_id: 'user-1',
   symbol: 'BTCUSDT',
+  coinpaprika_id: null,
+  coingecko_id: null,
   buy_order_id: 'buy-1',
   buy_trade_id: 'buy-trade-1',
   buy_time: '2026-10-29T12:00:00.000Z',

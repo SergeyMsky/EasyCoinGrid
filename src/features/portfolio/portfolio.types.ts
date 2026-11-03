@@ -38,6 +38,8 @@ export type SpotRotation = {
   id: string
   user_id: string
   symbol: string
+  coinpaprika_id: string | null
+  coingecko_id: string | null
   buy_order_id: string | null
   buy_trade_id: string | null
   buy_time: string | null
@@ -68,6 +70,7 @@ export type CloseRotationInput = {
 
 type CreateSpotRotationBaseInput = {
   symbol: string
+  coinGeckoId?: string | null
   buyPrice: number
   buyQty: number
   investedAmountUsd: number
@@ -88,6 +91,30 @@ export type CreateSpotRotationInput = CreateSpotRotationBaseInput &
         sellPrice?: never
         sellFeeAmountUsd?: never
         sellTime?: never
+      }
+  )
+
+type EditSpotRotationBaseInput = {
+  symbol: string
+  coinGeckoId: string | null
+  buyPrice: number
+  buyQty: number
+  investedAmountUsd: number | null
+  feeAmountUsd: number
+  buyTime: string
+}
+
+export type EditSpotRotationInput = EditSpotRotationBaseInput &
+  (
+    | {
+        status: 'OPEN'
+        sellPrice?: never
+        sellTime?: never
+      }
+    | {
+        status: 'CLOSED'
+        sellPrice: number
+        sellTime: string
       }
   )
 

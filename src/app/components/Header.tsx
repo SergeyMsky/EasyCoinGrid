@@ -1,6 +1,6 @@
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { Check, ChevronRight, LogOut, Menu, Settings, Sparkles, X } from 'lucide-react'
 import { SORTED_CURRENCY_OPTIONS, type Currency } from '@/features/portfolio/portfolio.types'
-import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import logo from '@/assets/logo.svg'
 import { ButtonLink } from '@/shared/components/Link'
@@ -38,31 +38,6 @@ function CurrencyFlag({ currency }: { currency: Currency }) {
 }
 
 export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl, navigationOpen, onToggleNavigation }: HeaderProps) {
-  const [profileOpen, setProfileOpen] = useState(false)
-  const [currencyOpen, setCurrencyOpen] = useState(false)
-
-  const profileButtonRef = useRef<HTMLDivElement>(null)
-  const profileMenuRef = useRef<HTMLDivElement>(null)
-  const currencyMenuRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as HTMLElement
-      if (
-        profileButtonRef.current?.contains(target) ||
-        profileMenuRef.current?.contains(target) ||
-        currencyMenuRef.current?.contains(target) ||
-        target.closest('[role="menu"]')
-      ) {
-        return
-      }
-      setProfileOpen(false)
-      setCurrencyOpen(false)
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
-
   return (
     <header className="sticky top-0 z-40 border-b border-outline bg-app">
       <div className="flex h-15.25 items-center justify-between gap-4 px-4">
@@ -95,106 +70,89 @@ export function Header({ onLogout, userEmail, currency, setCurrency, avatarUrl, 
         </div>
         <div className="flex h-full items-center gap-4">
           {userEmail ? (
-            <div ref={profileButtonRef} className="relative z-10 flex h-full">
-              <button
-                type="button"
-                aria-label="Open profile menu"
-                aria-expanded={profileOpen}
-                onClick={() => {
-                  setProfileOpen((open) => !open)
-                  setCurrencyOpen(false)
-                }}
-                className="group my-auto h-8 w-8 cursor-pointer overflow-hidden rounded-md border border-outline bg-accent-subtle text-sm font-medium text-accent transition hover:border-muted">
-                {avatarUrl ? <img src={avatarUrl} alt="Profile avatar" className="h-full w-full object-cover" /> : userEmail[0].toUpperCase()}
-              </button>
-              {profileOpen && (
-                <div
-                  ref={profileMenuRef}
-                  role="menu"
-                  onMouseDown={(event) => event.stopPropagation()}
-                  className="ui-surface absolute top-full right-0 z-10 w-54 overflow-hidden">
-                  <div className="border-b border-outline px-4 py-3">
-                    <p className="label mb-1 flex items-center gap-1.5 text-[10px]!">
+            <DropdownMenu.Root>
+              <DropdownMenu.Trigger asChild>
+                <button
+                  type="button"
+                  aria-label="Open profile menu"
+                  className="group my-auto h-8 w-8 cursor-pointer overflow-hidden rounded-md border border-outline bg-accent-subtle text-sm font-medium text-accent transition duration-200 hover:border-muted">
+                  {avatarUrl ? <img src={avatarUrl} alt="Profile avatar" className="h-full w-full object-cover" /> : userEmail[0].toUpperCase()}
+                </button>
+              </DropdownMenu.Trigger>
+              <DropdownMenu.Portal>
+                <DropdownMenu.Content align="end" sideOffset={4} className="ui-surface z-50 w-54 overflow-hidden">
+                  <DropdownMenu.Label className="block px-4 py-3">
+                    <p className="label mb-1 flex items-center gap-1.5 text-[10px]">
                       <Sparkles className="h-3 w-3 text-accent" />
                       Signed in as
                     </p>
                     <p className="truncate text-sm text-text" title={userEmail}>
                       {userEmail}
                     </p>
-                  </div>
-                  <div className="space-y-1 border-b border-outline p-1.5">
-                    <button
-                      type="button"
-                      aria-label={`Currency: ${currency}`}
-                      aria-expanded={currencyOpen}
-                      onClick={() => setCurrencyOpen((open) => !open)}
-                      className="group flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2.5 py-2 pr-1 text-left text-sm font-medium text-text transition hover:bg-surface-raised hover:text-text">
-                      <span>Currency</span>
-                      <span className="flex items-center gap-1">
-                        <span className="rounded-md border border-accent-outline bg-accent-subtle px-2 py-1 text-xs font-semibold text-accent">
-                          <span className="flex items-center gap-1.5">
-                            <CurrencyFlag currency={currency} />
-                            {currency}
-                          </span>
-                        </span>
-                        <ChevronRight
-                          className={`h-4 w-4 text-muted transition ${currencyOpen ? 'rotate-90 text-accent' : 'group-hover:translate-x-0.5 group-hover:text-accent'}`}
-                          aria-hidden="true"
-                        />
-                      </span>
-                    </button>
-                    {currencyOpen && (
-                      <div
-                        ref={currencyMenuRef}
-                        role="group"
-                        aria-label="Currency options"
-                        onMouseDown={(event) => event.stopPropagation()}
-                        className="mb-1 space-y-1">
-                        {SORTED_CURRENCY_OPTIONS.map((option) => (
-                          <button
-                            key={option}
-                            type="button"
-                            onClick={() => {
-                              setCurrency(option)
-                              setCurrencyOpen(false)
-                            }}
-                            className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2.5 py-2 text-left text-xs font-medium transition ${
-                              currency === option ? 'bg-accent text-on-accent' : 'text-muted hover:bg-surface-raised hover:text-text'
-                            }`}>
-                            <span className="flex items-center gap-2">
-                              <CurrencyFlag currency={option} />
-                              {option}
+                  </DropdownMenu.Label>
+                  <DropdownMenu.Separator className="border-b border-outline" />
+                  <div className="p-1.5">
+                    <DropdownMenu.Sub>
+                      <DropdownMenu.SubTrigger
+                        aria-label={`Currency: ${currency}`}
+                        className="group flex w-full cursor-pointer items-center justify-between gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-text transition duration-200 outline-none hover:bg-surface-raised hover:text-text data-[state=open]:bg-surface-raised">
+                        <span>Currency</span>
+                        <span className="flex items-center gap-1">
+                          <span className="rounded-md border border-accent-outline bg-accent-subtle px-2 py-1 text-xs font-semibold text-accent">
+                            <span className="flex items-center gap-1.5">
+                              <CurrencyFlag currency={currency} />
+                              {currency}
                             </span>
-                            {currency === option && <Check className="h-4 w-4 shrink-0 text-on-accent" strokeWidth={2.5} aria-hidden="true" />}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                          </span>
+                          <ChevronRight
+                            className="h-4 w-4 text-muted transition group-hover:text-accent group-data-[state=open]:rotate-90 group-data-[state=open]:text-accent"
+                            aria-hidden="true"
+                          />
+                        </span>
+                      </DropdownMenu.SubTrigger>
+                      <DropdownMenu.Portal>
+                        <DropdownMenu.SubContent sideOffset={12} alignOffset={-6} className="ui-surface z-50 min-w-36 overflow-hidden p-1.5">
+                          <DropdownMenu.RadioGroup value={currency} className="space-y-1">
+                            {SORTED_CURRENCY_OPTIONS.map((option) => (
+                              <DropdownMenu.RadioItem
+                                key={option}
+                                value={option}
+                                onSelect={() => setCurrency(option)}
+                                className="relative flex cursor-pointer items-center justify-between gap-3 rounded-md px-2.5 py-2 text-xs font-medium text-muted transition duration-200 outline-none hover:bg-surface-raised hover:text-text data-highlighted:bg-surface-raised data-highlighted:text-text data-[state=checked]:bg-accent data-[state=checked]:text-on-accent">
+                                <span className="flex items-center gap-2">
+                                  <CurrencyFlag currency={option} />
+                                  {option}
+                                </span>
+                                <DropdownMenu.ItemIndicator>
+                                  <Check className="h-4 w-4 shrink-0 text-app" strokeWidth={2.5} aria-hidden="true" />
+                                </DropdownMenu.ItemIndicator>
+                              </DropdownMenu.RadioItem>
+                            ))}
+                          </DropdownMenu.RadioGroup>
+                        </DropdownMenu.SubContent>
+                      </DropdownMenu.Portal>
+                    </DropdownMenu.Sub>
                   </div>
+                  <DropdownMenu.Separator className="border-b border-outline" />
                   <div className="space-y-1 p-1.5">
-                    <Link
-                      to="/settings"
-                      role="menuitem"
-                      onClick={() => setProfileOpen(false)}
-                      className="flex items-center gap-2 rounded-md px-2.5 py-2 text-sm font-medium text-text transition hover:bg-surface-raised hover:text-text">
-                      <Settings className="h-4 w-4" />
-                      Settings
-                    </Link>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-loss transition hover:bg-loss-subtle hover:text-loss"
-                      onClick={() => {
-                        setProfileOpen(false)
-                        onLogout?.()
-                      }}>
+                    <DropdownMenu.Item asChild>
+                      <Link
+                        to="/settings"
+                        className="flex cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-sm font-medium text-text transition duration-200 outline-none hover:bg-surface-raised hover:text-text data-highlighted:bg-surface-raised">
+                        <Settings className="h-4 w-4" aria-hidden="true" />
+                        Settings
+                      </Link>
+                    </DropdownMenu.Item>
+                    <DropdownMenu.Item
+                      onSelect={() => onLogout?.()}
+                      className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm font-medium text-loss transition duration-200 outline-none hover:bg-loss-subtle hover:text-loss data-highlighted:bg-loss-subtle">
                       <LogOut className="h-4 w-4" />
                       Log out
-                    </button>
+                    </DropdownMenu.Item>
                   </div>
-                </div>
-              )}
-            </div>
+                </DropdownMenu.Content>
+              </DropdownMenu.Portal>
+            </DropdownMenu.Root>
           ) : (
             <ButtonLink to="/auth?mode=register" size="sm">
               Get started
