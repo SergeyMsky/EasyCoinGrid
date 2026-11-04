@@ -466,7 +466,7 @@ export function ManualSpotDealModal(props: ManualSpotDealModalProps) {
                     {formatNumber(quantity)} coins · entry {formatUnitPrice(rotation.buy_price * currencyRate, currency)}
                   </p>
                 )}
-                <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-3 border-b border-outline pb-5 sm:grid-cols-2">
                   <div className="block text-sm">
                     <label htmlFor="sell-price">Close price (USD/USDT)</label>
                     <input
@@ -524,8 +524,8 @@ export function ManualSpotDealModal(props: ManualSpotDealModalProps) {
                 {error}
               </p>
             )}
-            <div className="flex justify-end gap-3 border-t border-outline pt-4">
-              <Button type="button" variant="dashboard" onClick={onCancel} disabled={saving}>
+            <div className="flex justify-end gap-3">
+              <Button type="button" variant="dashboard" className="text-md font-medium" onClick={onCancel} disabled={saving}>
                 Cancel
               </Button>
               <Button type="submit" disabled={saving}>

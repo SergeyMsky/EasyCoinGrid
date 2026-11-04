@@ -54,7 +54,7 @@
   }
 
   body {
-    @apply relative min-h-screen min-w-[320px] overflow-x-hidden bg-app font-space-grotesk text-text;
+    @apply relative min-h-screen min-w-[320px] overflow-x-hidden bg-surface font-space-grotesk text-text;
   }
 
   .input[type='number'] {

@@ -2,7 +2,7 @@ import type { Asset } from '@/features/portfolio/portfolio.types'
 
 export function exportAssetsToCsv(assets: Asset[]) {
   const rows = [
-    ['Asset', 'Amount', 'Price', 'Total', 'P/L'],
+    ['Asset', 'Amount', 'Price', 'Total', 'P/L & ROI'],
     ...assets.map((asset) => {
       const amount = Number(asset.free) + Number(asset.locked)
       const total = amount * asset.price

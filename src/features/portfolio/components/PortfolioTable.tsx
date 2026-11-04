@@ -11,6 +11,7 @@ import { Skeleton } from '@/shared/components/Skeleton'
 import { SortIndicator } from '@/shared/components/SortIndicator'
 import { TablePagination } from '@/shared/components/TablePagination'
 import { TABLE_PAGE_SIZE, useTablePagination } from '@/shared/hooks/useTablePagination'
+import { APP_LOCALE } from '@/shared/utils/locale'
 
 type PortfolioTableProps = {
   assets: AssetDisplay[]
@@ -24,6 +25,7 @@ type PortfolioTableProps = {
   refreshPortfolio: () => void
   loading: boolean
   refreshing?: boolean
+  error?: string | null
   lastUpdated: Date | null
   currency: Currency
 }
@@ -43,7 +45,7 @@ const columnButtons: Array<{
   { label: 'Total', value: 'Total' },
   { label: 'Price', value: 'Price' },
   { label: 'Avg Buy', value: 'Avg' },
-  { label: 'P/L', value: 'Pl' },
+  { label: 'P/L & ROI', value: 'Pl' },
 ]
 
 function PortfolioSkeleton() {
@@ -89,6 +91,7 @@ export function PortfolioTable({
   refreshPortfolio,
   loading,
   refreshing = false,
+  error = null,
   lastUpdated,
   currency,
 }: PortfolioTableProps) {
@@ -215,9 +218,20 @@ export function PortfolioTable({
         </table>
       </div>
       <TablePagination currentPage={currentPage} pageSize={TABLE_PAGE_SIZE} totalItems={assets.length} onPageChange={onPageChange} />
-      <div className="w-full border-t border-outline px-3 py-2 text-right text-xs text-muted">
-        Last updated: <span className="text-muted">{lastUpdated ? lastUpdated.toLocaleTimeString() : '—'}</span>
-      </div>
+      <p
+        className="flex items-center justify-end gap-3 border-t border-outline px-3 py-2 text-right text-xs text-muted"
+        role="status"
+        aria-live="polite">
+        {loading
+          ? 'Loading portfolio…'
+          : refreshing
+            ? 'Updating portfolio…'
+            : error
+              ? 'Portfolio could not be refreshed.'
+              : lastUpdated
+                ? `Last updated: ${new Intl.DateTimeFormat(APP_LOCALE, { dateStyle: 'medium', timeStyle: 'short' }).format(lastUpdated)}`
+                : 'Portfolio refreshes every five minutes.'}
+      </p>
     </div>
   )
 }

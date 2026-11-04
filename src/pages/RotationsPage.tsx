@@ -41,9 +41,7 @@ export function RotationsPage({ currency, userId }: RotationsPageProps) {
   const openCount = manualRotations.filter((rotation) => rotation.status === 'OPEN').length
   const closedCount = manualRotations.filter((rotation) => rotation.status === 'CLOSED').length
   const openRotations = manualRotations.filter((rotation) => rotation.status === 'OPEN')
-  const missingOpenPriceCount = openRotations.filter(
-    (rotation) => !rotation.coingecko_id || !pricesByCoinId[rotation.coingecko_id],
-  ).length
+  const missingOpenPriceCount = openRotations.filter((rotation) => !rotation.coingecko_id || !pricesByCoinId[rotation.coingecko_id]).length
   const openInvestedUsd = openRotations.reduce((total, rotation) => {
     const remainingQty = Math.max(0, rotation.buy_qty - rotation.sold_qty)
     return total + (rotation.invested_amount ?? rotation.buy_price * remainingQty)
@@ -70,8 +68,9 @@ export function RotationsPage({ currency, userId }: RotationsPageProps) {
   return (
     <main className="mx-auto px-4 pt-10 pb-4">
       <div>
-        <h1 className="text-3xl font-bold">Spot trade journal</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted">
+        <p className="label mb-2 text-accent">Spot</p>
+        <h1 className="text-3xl font-bold">Trade journal</h1>
+        <p className="mt-2 text-sm text-muted">
           Track each buy as its own deal, separate from the average price of coins already in your wallet. Add a sale now or record it later.
         </p>
       </div>

@@ -1,4 +1,4 @@
-import { BarChart3, ShieldCheck, WalletCards } from 'lucide-react'
+import { BarChart3, Repeat2, ShieldCheck, WalletCards } from 'lucide-react'
 import { useState } from 'react'
 import { LoginForm } from '@/features/auth/components/LoginForm'
 import { RegisterForm } from '@/features/auth/components/RegisterForm'
@@ -20,15 +20,18 @@ export function AuthPage() {
               <span className="text-text">Easy</span>CoinGrid
             </p>
             <h1 className="mb-5 text-4xl leading-tight font-semibold">
-              Your portfolio,
-              <span className="block text-muted">under control.</span>
+              More than
+              <span className="block text-muted">a balance.</span>
             </h1>
-            <p className="max-w-sm leading-7 text-muted">Track your crypto assets and understand your portfolio from one focused dashboard.</p>
+            <p className="max-w-sm leading-7 text-muted">
+              See what you own, how your portfolio changes over time, and how each spot trade performs.
+            </p>
           </div>
           <div className="space-y-5">
             {[
-              [WalletCards, 'All your assets in one place'],
-              [BarChart3, 'Clear portfolio insights'],
+              [WalletCards, 'Exchange balances in one view'],
+              [BarChart3, 'Portfolio performance over time'],
+              [Repeat2, 'A journal for manual spot trades'],
               [ShieldCheck, 'Read-only exchange access'],
             ].map(([Icon, text]) => (
               <div key={text as string} className="flex items-center gap-3 text-sm text-muted">

@@ -80,7 +80,6 @@ describe('RotationsPage', () => {
       updatedAt: null,
       refreshPrices: mocks.refreshPrices,
     })
-
   })
 
   it('renders the spot journal heading and summary while loading', () => {
@@ -332,7 +331,6 @@ describe('RotationsPage', () => {
     expect(openRow).toHaveTextContent('Floating')
     expect(within(openRow).getByText(formatSignedCurrency(6, 'EUR'))).toBeInTheDocument()
     expect(screen.getByText('+15%')).toBeInTheDocument()
-    expect(screen.getByText(/CoinGecko estimates · updated/)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Refresh current prices' }))
     expect(mocks.refreshPrices).toHaveBeenCalledOnce()

@@ -66,6 +66,9 @@ export function Dashboard({ currency, userId }: DashboardProps) {
     ? assets.reduce((total, asset) => total + (Number(asset.free) + Number(asset.locked)) * asset.price, 0)
     : null
   const portfolioHistory = useSpotPortfolioHistory(currentValueUsd, isBinanceConnected === true, userId)
+  const manualRotations = rotations.filter((rotation) => rotation.match_type === 'MANUAL')
+  const openManualRotationsCount = manualRotations.filter((rotation) => rotation.status === 'OPEN').length
+  const realizedManualPnlUsd = manualRotations.reduce((total, rotation) => total + (rotation.realized_pnl_usd ?? 0), 0)
 
   useEffect(() => {
     localStorage.setItem('view', view)
@@ -124,7 +127,6 @@ export function Dashboard({ currency, userId }: DashboardProps) {
         <h1 className="text-3xl font-bold">Portfolio overview</h1>
         <p className="mt-2 text-sm text-muted">Track your portfolio balance, asset allocation, and performance at a glance.</p>
       </div>
-
       <ErrorMessage message={rotationsError} />
       {!loading && error && assets.length === 0 ? (
         <PortfolioErrorState onRetry={refreshPortfolio} loading={refreshing} message={`${error} Please try again.`} />
@@ -163,15 +165,14 @@ export function Dashboard({ currency, userId }: DashboardProps) {
                   <p className="mt-1 text-sm text-muted">Track realized profit from individual spot trades.</p>
                 </div>
               </div>
-              <div className="border-outline pr-4 sm:border-r">
-                <p className="label">Open rotations</p>
-                <p className="mt-1 text-xl font-semibold">{rotations.filter((rotation) => rotation.status === 'OPEN').length}</p>
+              <div className="border-outline pr-4 text-right sm:border-r">
+                <p className="label">Open deals</p>
+                <p className="mt-1 text-xl font-semibold">{openManualRotationsCount}</p>
               </div>
-              <div>
-                <p className="label">Realized PnL ({currency})</p>
-                <p
-                  className={`mt-1 text-xl font-semibold ${rotations.reduce((total, rotation) => total + (rotation.realized_pnl_usd ?? 0), 0) >= 0 ? 'text-profit' : 'text-loss'}`}>
-                  {formatSignedCurrency(rotations.reduce((total, rotation) => total + (rotation.realized_pnl_usd ?? 0), 0) * currentRate, currency)}
+              <div className="pr-4 text-right">
+                <p className="label">Realized P/L ({currency})</p>
+                <p className={`mt-1 text-xl font-semibold ${realizedManualPnlUsd >= 0 ? 'text-profit' : 'text-loss'}`}>
+                  {formatSignedCurrency(realizedManualPnlUsd * currentRate, currency)}
                 </p>
               </div>
               <ButtonLink to="/rotations" size="sm">
@@ -193,6 +194,7 @@ export function Dashboard({ currency, userId }: DashboardProps) {
             refreshPortfolio={refreshPortfolio}
             loading={loading}
             refreshing={refreshing}
+            error={error}
             lastUpdated={lastUpdated}
             currency={currency}
           />

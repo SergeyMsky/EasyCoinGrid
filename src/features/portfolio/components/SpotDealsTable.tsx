@@ -202,7 +202,7 @@ export function SpotDealsTable({
   }
 
   return (
-    <section aria-label="Manual spot deals" aria-busy={loading} className="ui-surface mt-6 overflow-hidden">
+    <section aria-label="Manual spot deals" aria-busy={loading} className="ui-surface mt-4 overflow-hidden">
       <div className="flex min-h-13.75 flex-col items-start justify-between gap-4 border-b border-outline px-4 py-2 sm:flex-row sm:items-center">
         <div className="ui-surface flex gap-1 bg-app p-1" role="group" aria-label="Filter spot deals">
           {filterButtons.map(({ label, value }) => (
@@ -219,11 +219,11 @@ export function SpotDealsTable({
           ))}
         </div>
         <div className="flex w-full items-center justify-between gap-2 sm:justify-end">
+          <SearchInput value={search} onChange={setSearch} placeholder="Search deals" ariaLabel="Search spot deals" />
           <Button type="button" variant="dashboard" onClick={onAdd} className="gap-1">
             <Plus className="h-4 w-4" aria-hidden="true" />
             <span>Add deal</span>
           </Button>
-          <SearchInput value={search} onChange={setSearch} placeholder="Search deals" ariaLabel="Search spot deals" />
           {hasLinkedOpenRotations && (
             <Button
               type="button"
@@ -269,7 +269,7 @@ export function SpotDealsTable({
                       className={`label flex w-full cursor-pointer items-center gap-1 normal-case transition hover:text-accent! ${
                         index === 0 ? 'justify-start text-left' : 'justify-end text-right'
                       }`}>
-                      {index === 2 ? `Invested (${currency})` : column.label}
+                      {column.label}
                       <SortIndicator active={sortBy === column.sortKey} direction={sortDirection} />
                     </button>
                   ) : (
@@ -305,19 +305,8 @@ export function SpotDealsTable({
               </tr>
             ) : sortedRotations.length === 0 ? (
               <tr>
-                <td className="px-3 py-12 text-center" colSpan={columns.length}>
-                  <p className="text-sm font-medium">No spot deals found</p>
-                  <p className="mt-1 text-sm text-muted">Try another coin or change the selected status.</p>
-                  <Button
-                    type="button"
-                    variant="dashboard"
-                    onClick={() => {
-                      setSearch('')
-                      setFilter('all')
-                    }}
-                    className="mt-4">
-                    Clear search and filters
-                  </Button>
+                <td className="px-3 py-10 text-center text-sm text-muted" colSpan={columns.length}>
+                  Nothing found
                 </td>
               </tr>
             ) : (
@@ -488,7 +477,7 @@ export function SpotDealsTable({
               : pricesError
                 ? 'Current price estimates could not be refreshed.'
                 : pricesUpdatedAt
-                  ? `CoinGecko estimates · updated ${new Intl.DateTimeFormat(APP_LOCALE, { dateStyle: 'medium', timeStyle: 'short' }).format(pricesUpdatedAt)}`
+                  ? `Last updated: ${new Intl.DateTimeFormat(APP_LOCALE, { dateStyle: 'medium', timeStyle: 'short' }).format(pricesUpdatedAt)}`
                   : 'Current price estimates refresh every minute for linked coins.'}
         </p>
       )}

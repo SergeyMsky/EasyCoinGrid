@@ -28,9 +28,8 @@ export function TablePagination({ currentPage, pageSize, totalItems, onPageChang
           aria-label="Previous page"
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
-          className="gap-1">
+          className="p-1">
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-          Previous
         </Button>
         <span className="min-w-16 text-center text-xs text-muted" aria-current="page">
           Page {currentPage} of {totalPages}
@@ -42,8 +41,7 @@ export function TablePagination({ currentPage, pageSize, totalItems, onPageChang
           aria-label="Next page"
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
-          className="gap-1">
-          Next
+          className="p-1">
           <ChevronRight className="h-4 w-4" aria-hidden="true" />
         </Button>
       </nav>

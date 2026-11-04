@@ -36,11 +36,48 @@ function PublicRoute({ session, children }: { session: Session | null; children:
   return <>{children}</>
 }
 
-function AppLayout({ children, navigationOpen, onNavigate }: { children: ReactNode; navigationOpen: boolean; onNavigate: () => void }) {
+type AppLayoutProps = {
+  children: ReactNode
+  session: Session
+  navigationOpen: boolean
+  sidebarCollapsed: boolean
+  currency: Currency
+  avatarUrl: string | null
+  onLogout: () => void
+  setCurrency: (value: Currency) => void
+  onNavigate: () => void
+  onToggleMobile: () => void
+  onToggleCollapsed: () => void
+}
+
+function AppLayout({
+  children,
+  session,
+  navigationOpen,
+  sidebarCollapsed,
+  currency,
+  avatarUrl,
+  onLogout,
+  setCurrency,
+  onNavigate,
+  onToggleMobile,
+  onToggleCollapsed,
+}: AppLayoutProps) {
   return (
-    <div className="flex min-h-[calc(100vh-62px)]">
-      <Sidebar mobileOpen={navigationOpen} onNavigate={onNavigate} />
-      <main className="min-w-0 flex-1">{children}</main>
+    <div className="flex h-dvh overflow-hidden">
+      <Sidebar
+        mobileOpen={navigationOpen}
+        collapsed={sidebarCollapsed}
+        userEmail={session.user.email ?? ''}
+        currency={currency}
+        avatarUrl={avatarUrl}
+        onLogout={onLogout}
+        setCurrency={setCurrency}
+        onNavigate={onNavigate}
+        onToggleMobile={onToggleMobile}
+        onToggleCollapsed={onToggleCollapsed}
+      />
+      <main className="m-2 min-h-0 min-w-0 flex-1 overflow-y-auto rounded-xl border border-outline bg-app">{children}</main>
     </div>
   )
 }
@@ -49,6 +86,7 @@ function App() {
   const [currency, setCurrency] = useState<Currency>(getStoredCurrency())
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [navigationOpen, setNavigationOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const { session, loading: authLoading } = useAuth()
   const queryClient = useQueryClient()
   const previousUserId = useRef<string | null>(null)
@@ -56,6 +94,24 @@ function App() {
 
   async function handleLogout() {
     await signOut()
+  }
+
+  function renderAppPage(authenticatedSession: Session, children: ReactNode) {
+    return (
+      <AppLayout
+        session={authenticatedSession}
+        navigationOpen={navigationOpen}
+        sidebarCollapsed={sidebarCollapsed}
+        currency={currency}
+        avatarUrl={avatarUrl}
+        onLogout={handleLogout}
+        setCurrency={setCurrency}
+        onNavigate={() => setNavigationOpen(false)}
+        onToggleMobile={() => setNavigationOpen((open) => !open)}
+        onToggleCollapsed={() => setSidebarCollapsed((collapsed) => !collapsed)}>
+        {children}
+      </AppLayout>
+    )
   }
 
   useEffect(() => {
@@ -105,24 +161,23 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Header
-        userEmail={session?.user.email}
-        onLogout={handleLogout}
-        currency={currency}
-        setCurrency={setCurrency}
-        avatarUrl={avatarUrl}
-        navigationOpen={navigationOpen}
-        onToggleNavigation={() => setNavigationOpen((open) => !open)}
-      />
+      {!session && <Header />}
 
       <Suspense
         fallback={
-          <div className="flex min-h-[calc(100vh-62px)] items-center justify-center p-5">
+          <div className="flex min-h-screen items-center justify-center p-5">
             <Spinner className="size-10 border-6 border-outline border-t-accent" />
           </div>
         }>
         <Routes>
-          <Route path="/home" element={<Home />} />
+          <Route
+            path="/home"
+            element={
+              <PublicRoute session={session}>
+                <Home />
+              </PublicRoute>
+            }
+          />
           <Route path="/" element={<Navigate to={session ? '/dashboard' : '/home'} replace />} />
           <Route
             path="/auth"
@@ -135,16 +190,14 @@ function App() {
           <Route path="/auth/callback" element={<AuthCallbackPage />} />
           <Route path="/auth/confirm" element={<EmailConfirmedPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/privacy" element={session ? renderAppPage(session, <PrivacyPage />) : <PrivacyPage />} />
           <Route
             path="/dashboard"
             element={
               <ProtectedRoute session={session}>
-                {(authenticatedSession) => (
-                  <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
-                    <Dashboard currency={currency} userId={authenticatedSession.user.id} />
-                  </AppLayout>
-                )}
+                {(authenticatedSession) =>
+                  renderAppPage(authenticatedSession, <Dashboard currency={currency} userId={authenticatedSession.user.id} />)
+                }
               </ProtectedRoute>
             }
           />
@@ -152,11 +205,9 @@ function App() {
             path="/rotations"
             element={
               <ProtectedRoute session={session}>
-                {(authenticatedSession) => (
-                  <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
-                    <RotationsPage currency={currency} userId={authenticatedSession.user.id} />
-                  </AppLayout>
-                )}
+                {(authenticatedSession) =>
+                  renderAppPage(authenticatedSession, <RotationsPage currency={currency} userId={authenticatedSession.user.id} />)
+                }
               </ProtectedRoute>
             }
           />
@@ -164,11 +215,7 @@ function App() {
             path="/asset-history"
             element={
               <ProtectedRoute session={session}>
-                {(authenticatedSession) => (
-                  <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
-                    <AssetHistoryPage userId={authenticatedSession.user.id} />
-                  </AppLayout>
-                )}
+                {(authenticatedSession) => renderAppPage(authenticatedSession, <AssetHistoryPage userId={authenticatedSession.user.id} />)}
               </ProtectedRoute>
             }
           />
@@ -176,16 +223,17 @@ function App() {
             path="/settings"
             element={
               <ProtectedRoute session={session}>
-                {(authenticatedSession) => (
-                  <AppLayout navigationOpen={navigationOpen} onNavigate={() => setNavigationOpen(false)}>
+                {(authenticatedSession) =>
+                  renderAppPage(
+                    authenticatedSession,
                     <SettingsPage
                       userEmail={authenticatedSession.user.email ?? ''}
                       session={authenticatedSession}
                       avatarUrl={avatarUrl}
                       setAvatarUrl={setAvatarUrl}
-                    />
-                  </AppLayout>
-                )}
+                    />,
+                  )
+                }
               </ProtectedRoute>
             }
           />
