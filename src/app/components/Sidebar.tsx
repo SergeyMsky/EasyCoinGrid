@@ -86,13 +86,9 @@ export function Sidebar({
   onToggleMobile,
   onToggleCollapsed,
 }: SidebarProps) {
-  const accountButtonClass = `relative flex w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-md py-2 text-left transition hover:bg-surface-raised ${
-    collapsed ? 'lg:py-2' : ''
-  }`
-
   return (
     <>
-      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-outline bg-app px-4 lg:hidden">
+      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-outline bg-surface px-4 lg:hidden">
         <Brand onNavigate={onNavigate} />
         <button
           type="button"
@@ -152,12 +148,15 @@ export function Sidebar({
         <div className="mb-4 border-b border-outline pb-2">
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
-              <button type="button" aria-label={`Open profile menu for ${userEmail}`} className={accountButtonClass}>
-                <span className="h-8.5 w-8.5 shrink-0 items-center justify-center overflow-hidden rounded-md border border-outline bg-accent-subtle text-sm font-semibold text-accent">
+              <button
+                type="button"
+                aria-label={`Open profile menu for ${userEmail}`}
+                className={`relative flex w-full min-w-0 cursor-pointer items-center gap-2.5 overflow-hidden rounded-md py-2 text-left transition hover:bg-surface-raised ${collapsed ? 'lg:py-2' : 'pr-2'}`}>
+                <span className="flex h-8.5 w-8.5 shrink-0 items-center justify-center overflow-hidden rounded-md border border-outline bg-accent-subtle text-sm font-semibold text-accent">
                   {avatarUrl ? <img src={avatarUrl} alt="" className="h-full w-full object-cover" /> : (userEmail[0]?.toUpperCase() ?? '?')}
                 </span>
                 <span
-                  className={`absolute top-1/2 left-12 min-w-0 -translate-y-1/2 truncate whitespace-nowrap transition-opacity duration-150 ${
+                  className={`absolute top-1/2 left-12 max-w-10 min-w-[calc(100%-3.5rem)] -translate-y-1/2 truncate whitespace-nowrap transition-opacity duration-150 ${
                     collapsed ? 'lg:pointer-events-none lg:opacity-0' : 'lg:opacity-100 lg:delay-300'
                   }`}>
                   <span className="label block text-[10px]">Signed in as</span>

@@ -86,6 +86,16 @@
     @apply rounded-lg border border-outline bg-surface;
   }
 
+  .sign {
+    @apply mb-3 text-xs font-semibold tracking-[0.16em] text-accent uppercase;
+  }
+  .title {
+    @apply text-3xl leading-tight font-semibold tracking-tight sm:text-4xl;
+  }
+  .subtitle {
+    @apply mt-4 leading-7 text-muted;
+  }
+
   .input {
     @apply w-full rounded-lg border border-outline bg-app text-text transition duration-300 ease-in-out outline-none;
   }

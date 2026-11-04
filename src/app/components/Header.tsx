@@ -4,7 +4,7 @@ import { ButtonLink } from '@/shared/components/Link'
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-40 border-b border-outline bg-app">
+    <header className="sticky top-0 z-40 border-b border-outline bg-surface">
       <div className="mx-auto flex h-15.25 max-w-7xl items-center justify-between gap-4 px-4">
         <div className="flex min-w-0 items-center gap-3 sm:gap-6">
           <Link to="/home" className="group flex items-center gap-1 sm:gap-2">
