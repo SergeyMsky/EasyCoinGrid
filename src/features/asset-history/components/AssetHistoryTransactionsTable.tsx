@@ -137,7 +137,6 @@ export function AssetHistoryTransactionsTable({
     <section className="ui-surface relative mt-4" aria-busy={loading || loadingMore || syncing}>
       <div className="flex flex-col gap-3 border-b border-outline px-4 py-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="inline-flex items-end gap-2 text-sm">
-          <h2 className="font-semibold">Transactions</h2>
           <span className="text-muted">{transactions.length} shown</span>
         </div>
         <div className="flex flex-col items-center gap-2 sm:flex-row">

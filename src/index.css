@@ -78,6 +78,10 @@
 }
 
 @layer components {
+  .page-container {
+    @apply mx-auto w-full px-4 pt-20 pb-4 lg:pt-10;
+  }
+
   .label {
     @apply text-xs font-medium tracking-wider text-muted uppercase;
   }

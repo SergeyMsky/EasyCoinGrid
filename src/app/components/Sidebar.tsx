@@ -17,7 +17,7 @@ import {
 import { Link, NavLink } from 'react-router-dom'
 import type { Currency } from '@/features/portfolio/portfolio.types'
 import { SORTED_CURRENCY_OPTIONS } from '@/features/portfolio/portfolio.types'
-import logo from '@/assets/logo.svg'
+import { BrandLink } from '@/shared/components/BrandLink'
 
 type SidebarProps = {
   mobileOpen: boolean
@@ -60,20 +60,6 @@ function CurrencyFlag({ currency }: { currency: Currency }) {
   )
 }
 
-function Brand({ compact = false, onNavigate }: { compact?: boolean; onNavigate?: () => void }) {
-  return (
-    <Link to="/dashboard" aria-label="CoinBilka dashboard" onClick={onNavigate} className="group relative flex min-w-0 items-center gap-1.5">
-      <img className="h-8.5 w-8.5 shrink-0" src={logo} alt={logo} aria-hidden="true" />
-      <span
-        className={`truncate text-lg font-bold tracking-wider text-accent uppercase lg:absolute lg:left-10 lg:whitespace-nowrap lg:transition-opacity lg:duration-150 ${
-          compact ? 'lg:pointer-events-none lg:opacity-0' : 'lg:opacity-100 lg:delay-300'
-        }`}>
-        <span className="text-text">Coin</span>Bilka
-      </span>
-    </Link>
-  )
-}
-
 export function Sidebar({
   mobileOpen,
   collapsed,
@@ -89,14 +75,14 @@ export function Sidebar({
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-outline bg-surface px-4 lg:hidden">
-        <Brand onNavigate={onNavigate} />
+        <BrandLink to="/dashboard" ariaLabel="CoinBilka dashboard" onClick={onNavigate} />
         <button
           type="button"
           aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
           aria-expanded={mobileOpen}
           aria-controls="app-sidebar"
           onClick={onToggleMobile}
-          className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-md text-muted transition hover:bg-surface-raised hover:text-text">
+          className="flex h-8.5 w-8.5 cursor-pointer items-center justify-center rounded-md text-muted transition hover:bg-surface-raised hover:text-text">
           {mobileOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
         </button>
       </header>
@@ -110,10 +96,10 @@ export function Sidebar({
       )}
       <aside
         id="app-sidebar"
-        className={`group fixed top-14 bottom-0 left-0 z-30 -ml-2 flex min-w-0 shrink-0 flex-col overflow-x-clip bg-surface px-2 py-4 transition-[transform,width] duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
-          collapsed ? 'lg:w-12.5' : 'lg:w-64'
-        } ${mobileOpen ? 'visible translate-x-0' : 'invisible -translate-x-full lg:visible lg:translate-x-0'}`}>
-        <div className="flex items-center gap-2 pb-4">
+        className={`group fixed top-14 bottom-0 left-0 z-30 flex min-w-0 shrink-0 flex-col overflow-x-clip bg-surface px-2 py-4 transition-[translate,width] duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
+          collapsed ? 'lg:w-12.5' : 'w-64'
+        } ${mobileOpen ? 'visible translate-x-0' : 'visible -ml-2 -translate-x-full lg:translate-x-0'}`}>
+        <div className="hidden items-center gap-2 pb-4 lg:flex">
           <div className="relative flex min-w-0 flex-1 items-center justify-between">
             <div
               className={
@@ -121,7 +107,7 @@ export function Sidebar({
                   ? 'lg:transition-opacity lg:duration-0 lg:group-hover:opacity-0 lg:group-hover:delay-300 lg:has-focus-visible:opacity-0'
                   : ''
               }>
-              <Brand compact={collapsed} onNavigate={onNavigate} />
+              <BrandLink to="/dashboard" ariaLabel="CoinBilka dashboard" compact={collapsed} onClick={onNavigate} />
             </div>
             <div
               className={`hidden h-8.5 w-8.5 shrink-0 items-center justify-center lg:flex ${

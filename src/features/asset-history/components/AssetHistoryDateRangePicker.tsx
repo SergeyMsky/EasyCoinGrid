@@ -122,7 +122,7 @@ export function AssetHistoryDateRangePicker({ value, onChange }: AssetHistoryDat
   }
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative w-full" ref={containerRef}>
       <div className={`flex w-full items-center rounded-lg border bg-app transition ${hasInvalidInput ? 'border-loss' : 'border-outline'}`}>
         <input
           type="text"

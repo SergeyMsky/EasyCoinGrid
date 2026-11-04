@@ -66,7 +66,7 @@ export function RotationsPage({ currency, userId }: RotationsPageProps) {
   const currencyRate = rates[currency] ?? 1
 
   return (
-    <main className="mx-auto px-4 pt-10 pb-4">
+    <main className="page-container">
       <div>
         <p className="label mb-2 text-accent">Spot</p>
         <h1 className="text-3xl font-bold">Trade journal</h1>

@@ -16,7 +16,7 @@ export function TablePagination({ currentPage, pageSize, totalItems, onPageChang
   const lastItem = Math.min(currentPage * pageSize, totalItems)
 
   return (
-    <div className="flex flex-col items-center justify-between gap-2 border-t border-outline px-3 py-2 sm:flex-row">
+    <div className="flex flex-row items-center justify-between gap-2 border-t border-outline px-3 py-2">
       <p className="text-xs text-muted" aria-live="polite">
         Showing {firstItem}–{lastItem} of {totalItems}
       </p>

@@ -19,7 +19,7 @@ export function Select<Value extends string>({ value, options, onValueChange, ar
     <SelectPrimitive.Root value={value} onValueChange={(nextValue) => onValueChange(nextValue as Value)}>
       <SelectPrimitive.Trigger
         aria-label={ariaLabel}
-        className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-outline bg-app px-3 py-2 text-sm text-text transition outline-none hover:border-muted ${className}`}>
+        className={`flex w-full cursor-pointer items-center justify-between gap-2 rounded-lg border border-outline bg-app px-3 py-2 text-sm whitespace-nowrap text-text transition outline-none hover:border-muted ${className}`}>
         <SelectPrimitive.Value />
         <SelectPrimitive.Icon asChild>
           <ChevronDown className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />

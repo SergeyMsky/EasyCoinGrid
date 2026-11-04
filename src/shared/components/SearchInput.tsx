@@ -10,7 +10,7 @@ type SearchInputProps = {
 
 export function SearchInput({ value, onChange, placeholder, ariaLabel, className = '' }: SearchInputProps) {
   return (
-    <div className={`relative w-full max-w-3xs ${className}`}>
+    <div className={`relative w-full sm:max-w-3xs ${className}`}>
       <Search className="pointer-events-none absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 stroke-muted" aria-hidden="true" />
       <input
         type="text"

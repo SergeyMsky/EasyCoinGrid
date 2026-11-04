@@ -218,10 +218,10 @@ export function SpotDealsTable({
             </button>
           ))}
         </div>
-        <div className="flex w-full items-center justify-between gap-2 sm:justify-end">
+        <div className="flex w-full items-start gap-2 sm:justify-end">
           <SearchInput value={search} onChange={setSearch} placeholder="Search deals" ariaLabel="Search spot deals" />
-          <Button type="button" variant="dashboard" onClick={onAdd} className="gap-1">
-            <Plus className="h-4 w-4" aria-hidden="true" />
+          <Button type="button" variant="dashboard" onClick={onAdd} className="gap-1 whitespace-nowrap">
+            <Plus className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span>Add deal</span>
           </Button>
           {hasLinkedOpenRotations && (

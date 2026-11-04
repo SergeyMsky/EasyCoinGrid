@@ -121,7 +121,7 @@ export function Dashboard({ currency, userId }: DashboardProps) {
   }, [filteredAssets, view])
 
   return (
-    <section className="mx-auto px-4 pt-10 pb-4">
+    <section className="page-container">
       <div>
         <p className="label mb-2 text-accent">Binance Spot</p>
         <h1 className="text-3xl font-bold">Portfolio overview</h1>

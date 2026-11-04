@@ -76,7 +76,7 @@ export function AssetHistoryPage({ userId }: { userId: string }) {
   }, [fetchNextPage, hasNextPage, isFetchingNextPage])
 
   return (
-    <main className="mx-auto px-4 pt-10 pb-4">
+    <main className="page-container">
       <AssetHistorySyncPanel
         connected={connected}
         loading={loading}

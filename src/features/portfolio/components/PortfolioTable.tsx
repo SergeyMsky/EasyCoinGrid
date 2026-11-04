@@ -100,7 +100,7 @@ export function PortfolioTable({
   return (
     <div className="ui-surface mt-4 overflow-hidden">
       <div className="flex flex-col items-start justify-between gap-4 border-b border-outline px-4 py-2 sm:flex-row sm:items-center">
-        <div className="ui-surface order-1 flex gap-1 bg-app p-1 sm:order-0">
+        <div className="ui-surface flex gap-1 bg-app p-1 sm:order-0">
           {filterButtons.map(({ label, value }) => (
             <button
               key={value}
