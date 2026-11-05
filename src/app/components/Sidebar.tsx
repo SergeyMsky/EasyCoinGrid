@@ -18,6 +18,7 @@ import { Link, NavLink } from 'react-router-dom'
 import type { Currency } from '@/features/portfolio/portfolio.types'
 import { SORTED_CURRENCY_OPTIONS } from '@/features/portfolio/portfolio.types'
 import { BrandLink } from '@/shared/components/BrandLink'
+import { BRAND_NAME } from '@/shared/constants/brand-name'
 
 type SidebarProps = {
   mobileOpen: boolean
@@ -75,7 +76,7 @@ export function Sidebar({
   return (
     <>
       <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between border-b border-outline bg-surface px-4 lg:hidden">
-        <BrandLink to="/dashboard" ariaLabel="CoinBilka dashboard" onClick={onNavigate} />
+        <BrandLink to="/dashboard" ariaLabel={`${BRAND_NAME} dashboard`} onClick={onNavigate} />
         <button
           type="button"
           aria-label={mobileOpen ? 'Close navigation menu' : 'Open navigation menu'}
@@ -107,7 +108,7 @@ export function Sidebar({
                   ? 'lg:transition-opacity lg:duration-0 lg:group-hover:opacity-0 lg:group-hover:delay-300 lg:has-focus-visible:opacity-0'
                   : ''
               }>
-              <BrandLink to="/dashboard" ariaLabel="CoinBilka dashboard" compact={collapsed} onClick={onNavigate} />
+              <BrandLink to="/dashboard" ariaLabel={`${BRAND_NAME} dashboard`} compact={collapsed} onClick={onNavigate} />
             </div>
             <div
               className={`hidden h-8.5 w-8.5 shrink-0 items-center justify-center lg:flex ${

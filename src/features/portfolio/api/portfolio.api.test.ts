@@ -17,7 +17,7 @@ describe('getCoinsMetadata', () => {
     vi.resetModules()
     mocks.invoke.mockReset()
     for (const key of Object.keys(localStorage)) {
-      if (key.startsWith('easycoingrid:coin-metadata:')) localStorage.removeItem(key)
+      if (key.startsWith('coinbilka:coin-metadata:')) localStorage.removeItem(key)
     }
   })
 

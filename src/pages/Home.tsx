@@ -1,6 +1,12 @@
-import { Activity, ArrowRight, Check, Clock3, Image, LockKeyhole, ShieldCheck, WalletCards } from 'lucide-react'
+import { Activity, ArrowRight, Check, Clock3, LockKeyhole, ShieldCheck, WalletCards } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { ButtonLink } from '@/shared/components/Link'
+import { BrandName } from '@/shared/constants/brand'
+import assetHistoryImage from '@/assets/asset-history.png'
+import dashboardOverviewImage from '@/assets/dashboard-overview.png'
+import portfolioOverviewImage from '@/assets/portfolio-overview.png'
+import portfolioPerformanceImage from '@/assets/portfolio-performance.png'
+import spotRotationsImage from '@/assets/spot-rotations.png'
 
 const productViews = [
   {
@@ -9,7 +15,7 @@ const productViews = [
     title: 'The whole wallet, in context.',
     description: 'See exchange balances, asset allocation, and profit and loss together instead of piecing them together coin by coin.',
     screenshot: 'Portfolio overview: summary and asset table',
-    filename: 'portfolio-overview.png',
+    image: portfolioOverviewImage,
     icon: WalletCards,
     tone: 'orange',
   },
@@ -19,7 +25,7 @@ const productViews = [
     title: 'See how value changes.',
     description: 'Follow portfolio snapshots over time and compare the shape of your balance across different periods.',
     screenshot: 'Portfolio performance: value chart and period controls',
-    filename: 'portfolio-performance.png',
+    image: portfolioPerformanceImage,
     icon: Activity,
     tone: 'green',
   },
@@ -29,24 +35,21 @@ const productViews = [
     title: 'Give every buy its own record.',
     description: 'Keep separate spot rotations with entry price, quantity, fees, open estimates, and realized results.',
     screenshot: 'Spot rotations: open and closed deals with P/L',
-    filename: 'spot-rotations.png',
+    image: spotRotationsImage,
     icon: Clock3,
     tone: 'blue',
   },
 ]
 
-function ScreenshotPlaceholder({ title, filename, className = '' }: { title: string; filename: string; className?: string }) {
+function ScreenshotPreview({ title, src, className = '' }: { title: string; src: string; className?: string }) {
   return (
-    <div
-      role="img"
-      aria-label={`Screenshot placeholder: ${title}. Replace with ${filename}`}
-      className={`group relative flex min-h-52 flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-outline bg-app px-5 py-8 text-center sm:min-h-60 ${className}`}>
-      <span className="relative mb-4 grid size-11 place-items-center rounded-xl border border-outline bg-surface text-accent">
-        <Image className="size-5" aria-hidden="true" />
-      </span>
-      <span className="relative text-xs font-semibold tracking-wide text-text">Screenshot goes here</span>
-      <span className="relative mt-2 max-w-xs text-sm leading-5 text-muted">{title}</span>
-      <code className="relative mt-4 rounded-md border border-outline bg-surface px-2.5 py-1 text-[11px] text-subtle">{filename}</code>
+    <div className={`ui-surface mt-auto flex aspect-video max-h-135 flex-col overflow-hidden rounded-t-2xl rounded-b-none border-b-0 bg-app px-2 py-2 ${className}`}>
+      <div className="flex items-center gap-2 px-3 pb-2">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <span className="size-2 rounded-full bg-outline" key={index} />
+        ))}
+      </div>
+      <img src={src} alt={title} loading="lazy" decoding="async" className="block h-auto w-full bg-surface object-cover object-top" />
     </div>
   )
 }
@@ -55,49 +58,36 @@ export function Home() {
   return (
     <main className="overflow-hidden bg-app text-text">
       <section className="relative border-b border-outline">
-        <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-4 py-14 sm:py-24 lg:grid-cols-[0.88fr_1.12fr] lg:gap-14 lg:py-24">
-          <div className="max-w-xl">
-            <p className="ui-surface mb-5 inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted">
-              <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
-              Binance portfolio &amp; spot trade journal
-            </p>
-            <h1 className="text-4xl leading-[1.08] font-semibold tracking-tight sm:text-5xl xl:text-6xl">
-              One wallet view.
-              <span className="mt-1 block text-accent">Every buy, separate.</span>
-            </h1>
-            <p className="mt-6 max-w-lg text-base leading-7 text-muted sm:text-lg sm:leading-8">
-              Follow your Binance spot balances, portfolio history, and individual trade results in one place—without blending each buy into an
-              average.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-              <ButtonLink to="/auth?mode=register" variant="filled" className="justify-center gap-2">
-                Start your trade journal
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </ButtonLink>
-              <a
-                href="#product"
-                className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-muted transition hover:text-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">
-                Explore the product
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </a>
+        <div className="relative mx-auto max-w-7xl px-4 pt-14 sm:pt-24">
+          <p className="ui-surface mb-5 inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-muted">
+            <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
+            Binance portfolio &amp; spot trade journal
+          </p>
+          <div className="grid items-start gap-10 lg:grid-cols-[0.88fr_1.12fr]">
+            <div>
+              <h1 className="text-4xl leading-[1.08] font-semibold tracking-tight sm:text-5xl xl:text-6xl">
+                One wallet view.
+                <span className="mt-1 block text-accent">Every buy, separate.</span>
+              </h1>
+              <p className="mt-6 max-w-lg text-base leading-7 text-muted sm:text-lg sm:leading-8">
+                Follow your Binance spot balances, portfolio history, and individual trade results in one place—without blending each buy into an average.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <ButtonLink to="/auth?mode=register" variant="filled" className="justify-center gap-2">
+                  Start your trade journal
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </ButtonLink>
+                <a href="#product" className="inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium text-muted transition hover:text-text">
+                  Explore the product
+                  <ArrowRight className="size-4" aria-hidden="true" />
+                </a>
+              </div>
+              <p className="mt-6 flex items-start gap-2 text-xs leading-5 text-muted sm:text-sm">
+                <LockKeyhole className="mt-1 size-3.5 shrink-0 text-profit" aria-hidden="true" />
+                Binance connection is read-only. No trading or withdrawal permissions.
+              </p>
             </div>
-            <p className="mt-6 flex items-start gap-2 text-xs leading-5 text-muted sm:text-sm">
-              <LockKeyhole className="mt-0.5 size-4 shrink-0 text-profit" aria-hidden="true" />
-              Binance connection is read-only. No trading or withdrawal permissions.
-            </p>
-          </div>
-
-          <div className="ui-surface rounded-b-md p-2">
-            <div className="flex items-center gap-2 px-2 pb-3">
-              <span className="size-2 rounded-full bg-outline"></span>
-              <span className="size-2 rounded-full bg-outline"></span>
-              <span className="size-2 rounded-full bg-outline"></span>
-            </div>
-            <ScreenshotPlaceholder
-              title="Dashboard overview with portfolio summary and asset table"
-              filename="dashboard-overview.png"
-              className="min-h-64 sm:min-h-80"
-            />
+            <ScreenshotPreview title="Trade journal dashboard showing open and closed deals" src={dashboardOverviewImage} className="aspect-4/3! sm:max-h-135! md:aspect-auto!" />
           </div>
         </div>
       </section>
@@ -111,12 +101,9 @@ export function Home() {
           </div>
 
           <div className="grid gap-4 lg:grid-cols-3">
-            {productViews.map(({ number, eyebrow, title, description, screenshot, filename, icon: Icon, tone }) => (
-              <article
-                key={number}
-                className="group ui-surface flex min-w-0 flex-col p-3 transition-colors duration-300 hover:border-accent-outline sm:p-4">
-                <ScreenshotPlaceholder title={screenshot} filename={filename} className="min-h-52 flex-1 sm:min-h-60" />
-                <div className="flex items-start gap-3 px-1 pt-5 pb-1">
+            {productViews.map(({ number, eyebrow, title, description, screenshot, image, icon: Icon, tone }) => (
+              <article key={number} className="group ui-surface flex min-w-0 flex-col p-3 pb-0 transition-colors duration-300 hover:border-accent-outline sm:p-4 sm:pb-0">
+                <div className="flex flex-1 items-start gap-3 pb-5">
                   <span
                     className={`grid size-9 shrink-0 place-items-center rounded-lg border ${
                       tone === 'orange'
@@ -133,6 +120,7 @@ export function Home() {
                     <p className="mt-2 text-sm leading-6 text-muted">{description}</p>
                   </div>
                 </div>
+                <ScreenshotPreview title={screenshot} src={image} />
               </article>
             ))}
           </div>
@@ -141,20 +129,14 @@ export function Home() {
             <div className="flex flex-col justify-center p-5 sm:p-8">
               <p className="sign">Imported activity</p>
               <h3 className="text-2xl leading-tight font-semibold">The details behind your balances.</h3>
-              <p className="mt-3 text-sm leading-6 text-muted">
-                Sync Binance spot trades and other supported account history, then filter transactions by asset, type, or date.
-              </p>
+              <p className="mt-3 text-sm leading-6 text-muted">Sync Binance spot trades and other supported account history, then filter transactions by asset, type, or date.</p>
               <p className="mt-5 flex items-center gap-2 text-xs text-muted">
-                <Check className="size-4 text-profit" aria-hidden="true" />
+                <Check className="size-4 shrink-0 text-profit" aria-hidden="true" />
                 Imported records are separate from manually tracked rotations.
               </p>
             </div>
-            <div className="p-3 sm:p-4">
-              <ScreenshotPlaceholder
-                title="Asset history table with transaction filters and date range"
-                filename="asset-history.png"
-                className="min-h-56 sm:min-h-72"
-              />
+            <div className="mt-auto p-3 pb-0 sm:p-4 sm:pb-0">
+              <ScreenshotPreview title="Asset history table with transaction filters and date range" src={assetHistoryImage} />
             </div>
           </article>
         </div>
@@ -166,9 +148,7 @@ export function Home() {
             <div className="max-w-md">
               <p className="sign">How rotations work</p>
               <h2 className="title">From buy to result, without the blend.</h2>
-              <p className="subtitle">
-                Each manual rotation follows one buy through its own open and closed states. Portfolio-wide average buy prices remain a separate view.
-              </p>
+              <p className="subtitle">Each manual rotation follows one buy through its own open and closed states. Portfolio-wide average buy prices remain a separate view.</p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <article className="ui-surface bg-app p-4 sm:p-6">
@@ -199,8 +179,7 @@ export function Home() {
             </span>
             <h2 className="mt-5 text-2xl font-semibold">Read-only by design.</h2>
             <p className="mt-3 max-w-xl text-sm leading-6 text-muted">
-              Connect Binance with an API key that can read account data. EasyCoinGrid cannot place trades or withdraw funds. Keep those permissions
-              disabled when creating your key.
+              Connect Binance with an API key that can read account data. <BrandName /> cannot place trades or withdraw funds. Keep those permissions disabled when creating your key.
             </p>
             <Link to="/privacy" className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-text underline underline-offset-4">
               Read the privacy policy
@@ -223,13 +202,11 @@ export function Home() {
 
       <footer className="border-t border-outline">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 border-x border-outline px-4 py-6 text-sm text-muted sm:flex-row sm:items-center sm:justify-between">
-          <p>EasyCoinGrid — a clearer view of your crypto portfolio.</p>
+          <p>
+            <BrandName /> — a clearer view of your crypto portfolio.
+          </p>
           <nav aria-label="Footer" className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <a
-              href="https://github.com/SergeyMsky/EasyCoinGrid"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 transition hover:text-text">
+            <a href="https://github.com/SergeyMsky/coinbilka" target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 transition hover:text-text">
               <svg
                 version="1.0"
                 xmlns="http://www.w3.org/2000/svg"
@@ -258,7 +235,7 @@ export function Home() {
               View on GitHub
             </a>
             <Link to="/privacy" className="transition hover:text-text">
-              Read the privacy policy
+              Privacy policy
             </Link>
           </nav>
         </div>

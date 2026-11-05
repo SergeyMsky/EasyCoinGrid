@@ -9,6 +9,7 @@ import { Spinner } from '@/shared/components/Spinner'
 import { signOut } from '@/features/auth/api/auth.api'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { getAvatarUrl } from '@/services/avatar'
+import { BRAND_NAME } from '@/shared/constants/brand-name'
 
 const Dashboard = lazy(() => import('@/pages/Dashboard').then(({ Dashboard: page }) => ({ default: page })))
 const RotationsPage = lazy(() => import('@/pages/RotationsPage').then(({ RotationsPage: page }) => ({ default: page })))
@@ -91,6 +92,10 @@ function App() {
   const queryClient = useQueryClient()
   const previousUserId = useRef<string | null>(null)
   const userId = session?.user.id ?? null
+
+  useEffect(() => {
+    document.title = BRAND_NAME
+  }, [])
 
   async function handleLogout() {
     await signOut()

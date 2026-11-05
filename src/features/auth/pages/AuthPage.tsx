@@ -4,6 +4,7 @@ import { LoginForm } from '@/features/auth/components/LoginForm'
 import { RegisterForm } from '@/features/auth/components/RegisterForm'
 import { ForgotPasswordForm } from '@/features/auth/components/ForgotPasswordForm'
 import { useSearchParams } from 'react-router-dom'
+import { BrandName } from '@/shared/constants/brand'
 
 export function AuthPage() {
   const [searchParams] = useSearchParams()
@@ -14,18 +15,13 @@ export function AuthPage() {
   return (
     <main className="min-h-[calc(100vh-67px)] px-4 py-30 pt-20 sm:pt-30">
       <div className="ui-surface mx-auto grid w-full max-w-5xl overflow-hidden md:grid-cols-2">
-        <section className="hidden flex-col justify-between bg-surface-raised p-8 md:flex">
-          <div className="mb-12">
-            <p className="mb-8 text-sm font-bold tracking-[0.2em] text-accent uppercase">
-              <span className="text-text">Easy</span>CoinGrid
-            </p>
+        <section className="hidden flex-col justify-between gap-15 bg-surface-raised p-8 md:flex">
+          <div>
             <h1 className="mb-5 text-4xl leading-tight font-semibold">
               More than
               <span className="block text-muted">a balance.</span>
             </h1>
-            <p className="max-w-sm leading-7 text-muted">
-              See what you own, how your portfolio changes over time, and how each spot trade performs.
-            </p>
+            <p className="max-w-sm leading-7 text-muted">See what you own, how your portfolio changes over time, and how each spot trade performs.</p>
           </div>
           <div className="space-y-5">
             {[
@@ -43,7 +39,9 @@ export function AuthPage() {
         </section>
         <section className="px-4 py-8 sm:p-8">
           <div className="mb-10 sm:mb-15">
-            <p className="mb-2 text-sm text-accent">Welcome to easycoingrid</p>
+            <p className="mb-2">
+              <span className="text-sm text-accent">Welcome to</span> <BrandName />
+            </p>
             <h2 className="mb-2 text-3xl font-semibold">
               {mode === 'login' && 'Welcome back'}
               {mode === 'register' && 'Create your account'}
@@ -67,10 +65,7 @@ export function AuthPage() {
               </div>
               <div className="text-center text-muted">
                 {isLogin ? `Don't have an account?` : 'Already have an account?'}{' '}
-                <button
-                  type="button"
-                  className="cursor-pointer text-text transition hover:text-accent"
-                  onClick={() => setMode(isLogin ? 'register' : 'login')}>
+                <button type="button" className="cursor-pointer text-text transition hover:text-accent" onClick={() => setMode(isLogin ? 'register' : 'login')}>
                   {isLogin ? 'Sign up' : 'Sign in'}
                 </button>
               </div>

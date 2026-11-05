@@ -22,6 +22,7 @@ import { PasswordField } from '@/shared/components/PasswordField'
 import type { Session } from '@supabase/supabase-js'
 import { getAvatarUrl, uploadAvatar } from '@/services/avatar'
 import { portfolioQueryKeys } from '@/features/portfolio/api/portfolio-query-keys'
+import { BrandName } from '@/shared/constants/brand'
 
 type SettingsTab = 'account' | 'security' | 'exchanges'
 
@@ -360,7 +361,7 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
             {userEmail && (
               <>
                 <div className="mt-6 flex gap-4">
-                  <div className="flex h-15 w-15 items-center justify-center overflow-hidden rounded-md bg-accent-subtle text-2xl font-medium text-accent">
+                  <div className="flex h-15 w-15 items-center justify-center overflow-hidden rounded-md border border-outline bg-accent-subtle text-2xl font-medium text-accent">
                     {avatarUrl ? <img src={avatarUrl} alt="Profile avatar" className="h-full w-full object-cover" /> : userEmail[0].toUpperCase()}
                   </div>
                   <div>
@@ -586,7 +587,7 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
                     </div>
                   </div>
                   <p className="mt-4 text-xs leading-5 text-muted">
-                    easycoingrid can securely read your Binance balances, market data and account history using your read-only API credentials.
+                    <BrandName /> can securely read your Binance balances, market data and account history using your read-only API credentials.
                     Trading and withdrawals are not available.
                   </p>
                 </div>
@@ -666,7 +667,9 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
             <div className="mt-8 grid gap-4 border-t border-outline pt-6 sm:grid-cols-3">
               <div className="ui-surface bg-app p-4">
                 <h3 className="mb-2 text-sm font-medium">Read-only access</h3>
-                <p className="text-xs leading-5 text-muted">easycoingrid only reads balances and market data. It cannot trade or withdraw funds.</p>
+                <p className="text-xs leading-5 text-muted">
+                  <BrandName /> only reads balances and market data. It cannot trade or withdraw funds.
+                </p>
               </div>
               <div className="ui-surface bg-app p-4">
                 <h3 className="mb-2 text-sm font-medium">You stay in control</h3>

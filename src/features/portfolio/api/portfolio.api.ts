@@ -7,7 +7,7 @@ type CoinMetadata = {
 }
 
 const COIN_METADATA_CACHE_TTL_MS = 24 * 60 * 60 * 1000
-const COIN_METADATA_STORAGE_PREFIX = 'easycoingrid:coin-metadata:'
+const COIN_METADATA_STORAGE_PREFIX = 'coinbilka:coin-metadata:'
 const coinMetadataCache = new Map<string, { metadata: CoinMetadata; expiresAt: number }>()
 const coinMetadataRequests = new Map<string, Promise<CoinMetadata | null>>()
 

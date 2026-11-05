@@ -1,25 +1,26 @@
-# EasyCoinGrid
+# coinbilka
 
-EasyCoinGrid is a React application for viewing a Binance Spot portfolio. It displays asset balances, market prices, 24-hour changes, estimated average buy prices, and portfolio P/L. Users can connect Binance credentials, manage account settings, and choose a display currency.
+coinbilka is a Binance Spot portfolio tracker and trade journal. It brings wallet balances, portfolio history, imported account activity, and individually tracked spot deals together, with account and exchange settings in one responsive interface.
 
 ## Demo
 
-[Live Demo](https://easycoingrid.vercel.app)
+[Live Demo](https://coinbilka.vercel.app)
 
 ## Screenshots
 
-![EasyCoinGrid Dashboard](screenshots/dashboard.png)
+![coinbilka portfolio overview](src/assets/dashboard-preview.png)
 
 ## Features
 
 - Email registration, login, logout, session restoration, and password recovery/reset.
-- Account settings for email and password updates.
-- Binance connection and disconnection.
+- Account settings for email and password updates, avatar upload, and account deletion.
+- Binance connection and disconnection using server-side encrypted credentials.
 - Portfolio balances, asset prices, 24-hour changes, estimated average buy prices, and P/L calculations.
-- Portfolio summary and allocation breakdown.
+- Portfolio summary, allocation breakdown, and value history with selectable periods.
 - Asset search, performance filters, sortable columns, and CSV export.
+- A spot trade journal for manually recorded buys and sales, with open and realized P/L estimates.
+- Sync and filter Binance asset history, including Spot trades, deposits, withdrawals, transfers, Simple Earn activity, and Convert trades.
 - Currency selection and exchange-rate conversion.
-- Avatar upload and display.
 - A public privacy policy describing account, exchange, and portfolio data handling.
 - Loading, empty, Binance-not-connected, and error states.
 - Optional mock portfolio data for development.
@@ -42,9 +43,10 @@ src/
 ├── app/                 # App shell and shared header
 ├── features/
 │   ├── auth/            # Authentication API, hook, forms, and pages
+│   ├── asset-history/   # Binance account activity sync, filters, and transaction table
 │   ├── portfolio/       # Portfolio API, hook, UI, mock data, calculations
 │   └── settings/        # Account and Binance settings
-├── pages/               # Home and dashboard pages
+├── pages/               # Landing page, dashboard, trade journal, asset history, privacy
 ├── services/            # Avatar service
 ├── shared/              # Shared components, Supabase client, utilities
 └── test/                # Vitest setup
@@ -61,6 +63,7 @@ tests/e2e/               # Playwright end-to-end tests
 ## Authentication & Security
 
 Supabase Auth is used for email-based registration and login. The client restores the current session with `getSession()` and subscribes to auth state changes. The application includes logout and password recovery/reset flows.
+Account settings also support avatar updates and account deletion.
 
 The `exchange_connections` table stores Binance credentials in encrypted form. The `connect-binance` Edge Function encrypts the API key and secret with AES-GCM using the server-side `BINANCE_ENCRYPTION_KEY`. Binance requests are signed server-side with HMAC-SHA256. The encryption key must remain server-side and must not be exposed through client-side `VITE_` variables.
 
@@ -78,6 +81,10 @@ The Binance account request uses `/api/v3/account`; the portfolio flow does not 
 
 Portfolio data refreshes on a five-minute interval. Coin metadata failures are logged and do not prevent portfolio loading; price and average-buy requests are handled per asset, so an individual failure does not reject the entire portfolio load.
 
+The trade journal keeps manually recorded buys separate from portfolio balances and imported account activity. Open-deal values use CoinGecko estimates when a deal is linked to a coin; these are estimates, not executable prices. Binance asset-history sync imports Spot trades, deposits, withdrawals, transfers, Simple Earn activity, and Convert trades where available. Binance history availability varies by endpoint, and some activity is limited to the last 90 days.
+
+Portfolio history uses Binance Spot account snapshots where available. App-collected snapshots are recorded only while the app is open. Historical values use current exchange-rate conversion and are not cash-flow-adjusted profit; deposits, withdrawals, or transfers can affect the displayed change.
+
 ## Testing
 
 Run unit and component tests:
@@ -86,7 +93,7 @@ Run unit and component tests:
 npm run test:run
 ```
 
-Vitest runs tests under `src/**/*.test.{ts,tsx}` in `jsdom`. The current suite covers portfolio calculations and `PortfolioTable` interactions using React Testing Library.
+Vitest runs tests under `src/**/*.test.{ts,tsx}` in `jsdom`. The suite covers portfolio calculations and UI, trade journal and price handling, asset-history parsing, settings, and authentication-related behavior.
 
 Run Playwright end-to-end tests:
 
@@ -195,4 +202,4 @@ The application only enables mock portfolio data when running in Vite developmen
 ## Future Improvements
 
 - Consider using an isolated Supabase test project for E2E runs.
-- Expand automated coverage for settings and Supabase Edge Functions.
+- Expand end-to-end coverage for settings and automated coverage for Supabase Edge Functions.

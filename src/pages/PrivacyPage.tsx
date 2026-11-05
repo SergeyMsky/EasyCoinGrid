@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom'
+import { BrandName } from '@/shared/constants/brand'
+import { BRAND_NAME } from '@/shared/constants/brand-name'
 
 const sections = [
   {
     title: 'Information the app uses',
     paragraphs: [
       'Account information such as your email address and account identifier is handled by Supabase Authentication. If you upload an avatar, its image is stored in Supabase Storage. Avatar files are served from a public bucket, so anyone with the image URL may be able to view them; do not upload sensitive images.',
-      'When you connect Binance, EasyCoinGrid receives your API key and secret and stores encrypted copies in its database. The connection is used to retrieve Spot account balances, market data, and trade history for portfolio and rotation features. Portfolio snapshots and rotation records may also be stored against your account.',
+      `When you connect Binance, ${BRAND_NAME} receives your API key and secret and stores encrypted copies in its database. The connection is used to retrieve Spot account balances, market data, and trade history for portfolio and rotation features. Portfolio snapshots and rotation records may also be stored against your account.`,
       'Your selected display currency is saved in this browser’s local storage.',
     ],
   },
@@ -13,7 +15,7 @@ const sections = [
     title: 'How information is used',
     paragraphs: [
       'Information is used to authenticate your account, retrieve and display portfolio information, calculate portfolio values and performance, show rotation history, and provide account settings.',
-      'EasyCoinGrid does not provide trading or withdrawal features. When creating a Binance API key, use the least permissions necessary and disable trading and withdrawals.',
+      `${BRAND_NAME} does not provide trading or withdrawal features. When creating a Binance API key, use the least permissions necessary and disable trading and withdrawals.`,
     ],
   },
   {
@@ -34,29 +36,31 @@ const sections = [
 
 export function PrivacyPage() {
   return (
-    <main className="mx-auto w-full max-w-7xl px-4 py-10">
-      <header className="mb-8">
-        <Link to="/home" className="label text-accent hover:text-text">
-          EasyCoinGrid
-        </Link>
-        <h1 className="mt-2 text-3xl font-bold">Privacy policy</h1>
-        <p className="mt-2 text-sm text-muted">Last updated: 31 October 2026</p>
-        <p className="mt-5 leading-7 text-muted">
-          This page explains what information EasyCoinGrid uses and how the app handles it when you use the portfolio dashboard.
-        </p>
-      </header>
-      <div className="space-y-4">
-        {sections.map(({ title, paragraphs }) => (
-          <section key={title} className="ui-surface space-y-3 p-5 sm:p-6">
-            <h2 className="text-lg font-semibold">{title}</h2>
-            {paragraphs.map((paragraph) => (
-              <p key={paragraph} className="text-sm leading-7 text-muted">
-                {paragraph}
-              </p>
-            ))}
-          </section>
-        ))}
-      </div>
+    <main className="bg-app">
+      <section className="mx-auto w-full max-w-7xl px-4 py-14 sm:py-24">
+        <div className="mb-8">
+          <Link to="/home" className="text-accent hover:text-text">
+            <BrandName />
+          </Link>
+          <h1 className="title mt-2">Privacy policy</h1>
+          <p className="label mt-2 text-[10px]">Last updated: 31 October 2026</p>
+          <p className="mt-5 leading-7 text-muted">
+            This page explains what information <BrandName /> uses and how the app handles it when you use the portfolio dashboard.
+          </p>
+        </div>
+        <div className="space-y-4">
+          {sections.map(({ title, paragraphs }) => (
+            <article key={title} className="ui-surface space-y-3 p-5 sm:p-6">
+              <h2 className="text-lg font-semibold">{title}</h2>
+              {paragraphs.map((paragraph) => (
+                <p key={paragraph} className="text-sm leading-7 text-muted">
+                  {paragraph}
+                </p>
+              ))}
+            </article>
+          ))}
+        </div>
+      </section>
     </main>
   )
 }

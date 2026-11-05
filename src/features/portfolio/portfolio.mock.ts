@@ -10,7 +10,7 @@ export const mockPortfolio: Asset[] = [
     change24h: 821,
     change24hPercent: 1.2,
     name: 'Bitcoin',
-    image: null,
+    image: 'https://assets.coincap.io/assets/icons/btc@2x.png',
   },
   {
     asset: 'ETH',
@@ -21,7 +21,7 @@ export const mockPortfolio: Asset[] = [
     change24h: -25.06,
     change24hPercent: -0.7,
     name: 'Ethereum',
-    image: null,
+    image: 'https://assets.coincap.io/assets/icons/eth@2x.png',
   },
   {
     asset: 'BNB',
@@ -32,7 +32,7 @@ export const mockPortfolio: Asset[] = [
     change24h: 4.9,
     change24hPercent: 0.8,
     name: 'BNB',
-    image: null,
+    image: 'https://assets.coincap.io/assets/icons/bnb@2x.png',
   },
   {
     asset: 'SOL',
@@ -43,7 +43,7 @@ export const mockPortfolio: Asset[] = [
     change24h: 2.96,
     change24hPercent: 2,
     name: 'Solana',
-    image: null,
+    image: 'https://assets.coincap.io/assets/icons/sol@2x.png',
   },
   {
     asset: 'XRP',
@@ -54,7 +54,7 @@ export const mockPortfolio: Asset[] = [
     change24h: -0.0124,
     change24hPercent: -2,
     name: 'XRP',
-    image: null,
+    image: 'https://assets.coincap.io/assets/icons/xrp@2x.png',
   },
   {
     asset: 'ADA',
@@ -65,7 +65,7 @@ export const mockPortfolio: Asset[] = [
     change24h: 0.0088,
     change24hPercent: 2,
     name: 'Cardano',
-    image: null,
+    image: 'https://assets.coincap.io/assets/icons/ada@2x.png',
   },
   {
     asset: 'DOGE',
@@ -76,7 +76,7 @@ export const mockPortfolio: Asset[] = [
     change24h: -0.0032,
     change24hPercent: -2,
     name: 'Dogecoin',
-    image: null,
+    image: 'https://assets.coincap.io/assets/icons/doge@2x.png',
   },
   {
     asset: 'LINK',
@@ -87,7 +87,7 @@ export const mockPortfolio: Asset[] = [
     change24h: 0.284,
     change24hPercent: 2,
     name: 'Chainlink',
-    image: null,
+    image: 'https://assets.coincap.io/assets/icons/link@2x.png',
   },
   {
     asset: 'AVAX',
@@ -98,7 +98,7 @@ export const mockPortfolio: Asset[] = [
     change24h: 0.345,
     change24hPercent: 1,
     name: 'Avalanche',
-    image: null,
+    image: 'https://assets.coincap.io/assets/icons/avax@2x.png',
   },
   {
     asset: 'DOT',
@@ -109,7 +109,7 @@ export const mockPortfolio: Asset[] = [
     change24h: -0.071,
     change24hPercent: -1,
     name: 'Polkadot',
-    image: null,
+    image: 'https://assets.coincap.io/assets/icons/dot@2x.png',
   },
   {
     asset: 'LTC',
@@ -120,7 +120,7 @@ export const mockPortfolio: Asset[] = [
     change24h: 1.23,
     change24hPercent: 1.5,
     name: 'Litecoin',
-    image: null,
+    image: 'https://assets.coincap.io/assets/icons/ltc@2x.png',
   },
   {
     asset: 'UNI',
@@ -131,7 +131,7 @@ export const mockPortfolio: Asset[] = [
     change24h: -0.188,
     change24hPercent: -2,
     name: 'Uniswap',
-    image: null,
+    image: 'https://assets.coincap.io/assets/icons/uni@2x.png',
   },
   {
     asset: 'ATOM',
@@ -142,7 +142,7 @@ export const mockPortfolio: Asset[] = [
     change24h: 0.129,
     change24hPercent: 1.5,
     name: 'Cosmos',
-    image: null,
+    image: 'https://assets.coincap.io/assets/icons/atom@2x.png',
   },
   {
     asset: 'NEAR',
@@ -153,7 +153,7 @@ export const mockPortfolio: Asset[] = [
     change24h: -0.104,
     change24hPercent: -2,
     name: 'NEAR Protocol',
-    image: null,
+    image: 'https://assets.coincap.io/assets/icons/near@2x.png',
   },
   {
     asset: 'USDT',
@@ -164,6 +164,6 @@ export const mockPortfolio: Asset[] = [
     change24h: 0,
     change24hPercent: 0,
     name: 'Tether',
-    image: null,
+    image: 'https://assets.coincap.io/assets/icons/usdt@2x.png',
   },
 ]
