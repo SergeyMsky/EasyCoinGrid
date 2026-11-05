@@ -145,7 +145,7 @@ export function Dashboard({ currency, userId }: DashboardProps) {
               buy prices, portfolio history, and historical P/L remain approximate and assume 1 USDT ≈ 1 USD.
             </p>
           )}
-          <Suspense fallback={<div aria-hidden="true" className="mt-6 h-72 animate-pulse rounded-lg border border-outline bg-surface" />}>
+          <Suspense fallback={<div aria-hidden="true" className="ui-surface mt-6 h-72 animate-pulse" />}>
             <SpotPortfolioPerformance
               snapshots={portfolioHistory.snapshots}
               loading={portfolioHistory.loading}
@@ -158,19 +158,19 @@ export function Dashboard({ currency, userId }: DashboardProps) {
             />
           </Suspense>
           {!rotationsLoading && (
-            <div className="ui-surface mt-4 flex flex-col items-start gap-4 p-4 sm:flex-row sm:items-center">
-              <div className="flex flex-1 items-center gap-2">
+            <div className="ui-surface mt-4 grid grid-cols-2 items-center gap-4 p-4 md:grid-cols-[1fr_auto_auto_auto] [&>*:first-child]:max-md:col-span-2 [&>*:last-child]:max-md:col-span-2">
+              <div className="flex items-center gap-2">
                 <Repeat2 className="h-5 w-5 shrink-0" aria-hidden="true" />
                 <div>
                   <h2 className="text-lg font-semibold">Spot rotations</h2>
-                  <p className="mt-1 text-sm text-muted">Track realized profit from individual spot trades.</p>
+                  <p className="text-sm text-muted">Track realized profit from individual spot trades.</p>
                 </div>
               </div>
               <div className="border-outline pr-4 text-right sm:border-r">
                 <p className="label">Open deals</p>
                 <p className="mt-1 text-xl font-semibold">{openManualRotationsCount}</p>
               </div>
-              <div className="pr-4 text-right">
+              <div className="text-right md:pr-4">
                 <p className="label">Realized P/L ({currency})</p>
                 <p className={`mt-1 text-xl font-semibold ${realizedManualPnlUsd >= 0 ? 'text-profit' : 'text-loss'}`}>
                   {formatSignedCurrency(realizedManualPnlUsd * currentRate, currency)}

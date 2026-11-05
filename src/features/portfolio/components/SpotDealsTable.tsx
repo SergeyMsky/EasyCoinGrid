@@ -295,7 +295,7 @@ export function SpotDealsTable({
           Prices could not be refreshed: {pricesError} Showing the last available estimates where possible.
         </p>
       )}
-      <div className="overflow-x-auto">
+      <div className="@container overflow-x-auto">
         <table className="w-full min-w-250 table-fixed text-left">
           <colgroup>
             <col className="w-[18%]" />
@@ -337,19 +337,21 @@ export function SpotDealsTable({
             <tbody>
               {rotations.length === 0 ? (
                 <tr>
-                  <td className="px-3 py-12 text-center" colSpan={columns.length}>
-                    <p className="text-sm font-medium">Your spot journal is empty</p>
-                    <p className="mt-1 text-sm text-muted">Add a buy to track a deal separately from your long-term holdings.</p>
-                    <Button type="button" variant="dashboard" onClick={onAdd} className="mt-4 gap-1">
-                      <Plus className="h-4 w-4" aria-hidden="true" />
-                      Add your first deal
-                    </Button>
+                  <td colSpan={columns.length}>
+                    <div className="sticky left-0 w-[100cqw] px-3 py-10 text-center">
+                      <p className="text-sm font-medium">Your spot journal is empty</p>
+                      <p className="mt-1 text-sm text-muted">Add a buy to track a deal separately from your long-term holdings.</p>
+                      <Button type="button" variant="dashboard" onClick={onAdd} className="mt-4 gap-1">
+                        <Plus className="h-4 w-4" aria-hidden="true" />
+                        Add your first deal
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ) : sortedRotations.length === 0 ? (
                 <tr>
-                  <td className="px-3 py-10 text-center text-sm text-muted" colSpan={columns.length}>
-                    Nothing found
+                  <td colSpan={columns.length}>
+                    <div className="sticky left-0 w-[100cqw] px-3 py-10 text-center text-sm text-muted">Nothing found</div>
                   </td>
                 </tr>
               ) : (

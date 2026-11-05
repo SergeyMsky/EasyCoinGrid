@@ -40,7 +40,7 @@ function PortfolioHistoryTooltip({ active, payload, label, currency }: TooltipCo
   if (!active || !payload?.length || typeof label !== 'number' || typeof payload[0].value !== 'number') return null
 
   return (
-    <div role="tooltip" className="rounded-lg border border-outline bg-surface-raised px-3 py-2">
+    <div role="tooltip" className="ui-surface bg-surface-raised px-3 py-2">
       <p className="text-xs text-muted">{tooltipDateFormatter.format(label)}</p>
       <p className="mt-1 text-sm font-semibold text-accent">{formatCurrency(payload[0].value, currency)}</p>
     </div>
@@ -52,7 +52,7 @@ function AllocationTooltip({ active, payload, currency }: TooltipContentProps & 
   if (!active || !segment) return null
 
   return (
-    <div role="tooltip" className="rounded-lg border border-outline bg-surface-raised px-3 py-2">
+    <div role="tooltip" className="ui-surface bg-surface-raised px-3 py-2">
       <p className="text-sm font-semibold text-text">{segment.symbol}</p>
       <p className="mt-1 text-xs text-muted">
         {formatCurrency(segment.value, currency)} · {segment.percentage.toFixed(2)}%
@@ -286,8 +286,8 @@ export function SpotPortfolioPerformance({
         </div>
       </div>
 
-      <p className="mt-5 flex items-center gap-2 border-t border-outline pt-4 text-xs leading-relaxed text-warning">
-        <CircleAlert className="h-4 w-4 shrink-0" />
+      <p className="mt-5 flex items-start gap-2 border-t border-outline pt-4 text-xs leading-relaxed text-warning">
+        <CircleAlert className="mt-1 h-4 w-4 shrink-0" />
         Historical values use Binance Spot account snapshots where available. Older history may be unavailable; app snapshots are collected only while
         the app is open. Values are converted to {currency} using the current exchange rate. Value change is not cash-flow-adjusted profit and may
         include deposits, withdrawals, or transfers.

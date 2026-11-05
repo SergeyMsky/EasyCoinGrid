@@ -163,7 +163,7 @@ export function AssetHistoryTransactionsTable({
           />
         </div>
       </div>
-      <div className="overflow-x-auto">
+      <div className="@container overflow-x-auto">
         <table className="w-full min-w-225 table-fixed text-left" aria-label="Asset history">
           <colgroup>
             <col className="w-[25%]" />
@@ -214,12 +214,14 @@ export function AssetHistoryTransactionsTable({
           ) : transactions.length === 0 ? (
             <tbody>
               <tr>
-                <td colSpan={5} className="px-3 py-10 text-center text-sm text-muted">
-                  {hasFilters
-                    ? 'No transactions match your search or filter.'
-                    : connected
-                      ? 'No imported transactions yet. Select “Sync now” to fetch history from Binance.'
-                      : 'No transactions to show.'}
+                <td colSpan={5}>
+                  <div className="sticky left-0 w-[100cqw] px-3 py-10 text-center text-sm text-muted">
+                    {hasFilters
+                      ? 'No transactions match your search or filter.'
+                      : connected
+                        ? 'No imported transactions yet. Select “Sync now” to fetch history from Binance.'
+                        : 'No transactions to show.'}
+                  </div>
                 </td>
               </tr>
             </tbody>

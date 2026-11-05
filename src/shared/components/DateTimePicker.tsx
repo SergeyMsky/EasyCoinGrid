@@ -153,7 +153,7 @@ function TimeSelect({
           position="popper"
           sideOffset={4}
           align="start"
-          className="z-70 max-h-56 min-w-(--radix-select-trigger-width) overflow-hidden rounded-lg border border-outline bg-surface p-1 text-text">
+          className="ui-surface z-70 max-h-56 min-w-(--radix-select-trigger-width) overflow-hidden p-1 text-text">
           <Select.Viewport className="max-h-52 overflow-y-auto">
             {values.map((option) => (
               <Select.Item

@@ -77,7 +77,7 @@ function AppLayout({
         onToggleMobile={onToggleMobile}
         onToggleCollapsed={onToggleCollapsed}
       />
-      <main className="m-2 min-h-0 min-w-0 flex-1 overflow-y-auto rounded-xl border border-outline bg-app">{children}</main>
+      <main className="m-2 min-h-0 min-w-0 flex-1 overflow-y-auto rounded-xl border border-outline bg-app max-lg:mt-16">{children}</main>
     </div>
   )
 }

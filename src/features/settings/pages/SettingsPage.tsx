@@ -1,15 +1,17 @@
+import * as Dialog from '@radix-ui/react-dialog'
 import { useState, useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
-import { AlertCircle, Camera, CheckCircle2, Network, ShieldCheck, UserRound, type LucideIcon } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { AlertCircle, Camera, CheckCircle2, Network, ShieldCheck, Trash2, UserRound, type LucideIcon } from 'lucide-react'
 import {
   connectBinance,
+  deleteAccount,
   disconnectBinance,
   getBinanceConnectionStatus,
   updateEmail,
   updatePassword,
   verifyCurrentPassword,
 } from '@/features/settings/api/settings.api'
-import { useSearchParams } from 'react-router-dom'
 import { ErrorMessage } from '@/shared/components/ErrorMessage'
 import { SuccessMessage } from '@/shared/components/SuccessMessage'
 import { validatePassword } from '@/shared/utils/validate-password'
@@ -38,15 +40,22 @@ type SettingsProps = {
 
 export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: SettingsProps) {
   const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const profilePhotoInputRef = useRef<HTMLInputElement>(null)
   const [avatarLoading, setAvatarLoading] = useState(false)
   const [avatarError, setAvatarError] = useState<string | null>(null)
 
-  const [email, setEmail] = useState(userEmail || '')
+  const [emailDraft, setEmailDraft] = useState<{ userEmail: string | undefined; value: string } | null>(null)
+  const email = emailDraft && emailDraft.userEmail === userEmail ? emailDraft.value : (userEmail ?? '')
   const [emailCurrentPassword, setEmailCurrentPassword] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
   const [emailSuccess, setEmailSuccess] = useState<string | null>(null)
   const [emailLoading, setEmailLoading] = useState(false)
+  const [accountDeleteOpen, setAccountDeleteOpen] = useState(false)
+  const [accountDeletePassword, setAccountDeletePassword] = useState('')
+  const [accountDeleteConfirmation, setAccountDeleteConfirmation] = useState('')
+  const [accountDeleteError, setAccountDeleteError] = useState<string | null>(null)
+  const [accountDeleteLoading, setAccountDeleteLoading] = useState(false)
 
   const [password, setPassword] = useState({
     current: '',
@@ -125,13 +134,43 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
         return
       }
 
-      setEmail(nextEmail)
       setEmailCurrentPassword('')
-      setEmailSuccess('Check your new email to confirm the change.')
+      setEmailSuccess(
+        'Your current email stays active until you confirm the change. Check your new email and follow the confirmation link. If asked, also confirm from your current email.',
+      )
     } catch (error) {
       setEmailError(error instanceof Error ? error.message : 'Unable to update email.')
     } finally {
       setEmailLoading(false)
+    }
+  }
+
+  async function handleAccountDelete(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setAccountDeleteError(null)
+
+    if (!userEmail || !session?.user.id) {
+      setAccountDeleteError('Unable to identify the current account.')
+      return
+    }
+
+    if (accountDeleteConfirmation !== 'DELETE') {
+      setAccountDeleteError('Type DELETE exactly to confirm account deletion.')
+      return
+    }
+
+    setAccountDeleteLoading(true)
+
+    try {
+      await deleteAccount(accountDeletePassword)
+      queryClient.clear()
+      setAvatarUrl(null)
+      setAccountDeleteOpen(false)
+      navigate('/auth', { replace: true })
+    } catch (error) {
+      setAccountDeleteError(error instanceof Error ? error.message : 'Unable to delete your account.')
+    } finally {
+      setAccountDeleteLoading(false)
     }
   }
 
@@ -293,7 +332,7 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
   }
 
   return (
-    <main className="mx-auto px-4 py-10">
+    <main className="page-container">
       <div className="mb-8">
         <p className="label mb-2">Account</p>
         <h1 className="mb-2 text-3xl font-bold">Settings</h1>
@@ -315,7 +354,7 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
           </nav>
         </aside>
         {activeTab === 'account' && (
-          <section className="ui-surface p-6">
+          <section className="ui-surface p-4 sm:p-6">
             <h2 className="mb-1 text-lg font-semibold">Account</h2>
             <p className="text-sm text-muted">Manage your account details and profile photo.</p>
             {userEmail && (
@@ -360,7 +399,7 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
                     id="email"
                     autoComplete="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    onChange={(e) => setEmailDraft({ userEmail, value: e.target.value })}
                     required
                   />
                 </label>
@@ -381,10 +420,95 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
                 {emailLoading ? 'Updating...' : 'Update email'}
               </Button>
             </form>
+            <section aria-labelledby="danger-zone-heading" className="mt-8 border-t border-outline pt-6">
+              <div className="ui-surface bg-surface-raised p-4">
+                <h2 id="danger-zone-heading" className="mb-1 text-lg font-semibold">
+                  Danger zone
+                </h2>
+                <p className="mb-4 text-sm text-muted">Permanently remove your account and its data.</p>
+                <Dialog.Root
+                  open={accountDeleteOpen}
+                  onOpenChange={(open) => {
+                    if (accountDeleteLoading) return
+                    setAccountDeleteOpen(open)
+                    if (!open) {
+                      setAccountDeletePassword('')
+                      setAccountDeleteConfirmation('')
+                      setAccountDeleteError(null)
+                    }
+                  }}>
+                  <Dialog.Trigger asChild>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="shrink-0 border-loss-outline bg-loss-subtle hover:border-loss hover:bg-loss-subtle hover:text-loss">
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      Delete account
+                    </Button>
+                  </Dialog.Trigger>
+                  <Dialog.Portal>
+                    <Dialog.Overlay className="fixed inset-0 z-50 bg-overlay" />
+                    <Dialog.Content
+                      onEscapeKeyDown={(event) => {
+                        if (accountDeleteLoading) event.preventDefault()
+                      }}
+                      onPointerDownOutside={(event) => {
+                        if (accountDeleteLoading) event.preventDefault()
+                      }}
+                      className="ui-surface fixed top-1/2 left-1/2 z-50 w-[calc(100%-2rem)] max-w-md -translate-x-1/2 -translate-y-1/2 p-5">
+                      <Dialog.Title className="text-lg font-semibold text-loss">Delete your account?</Dialog.Title>
+                      <Dialog.Description className="mt-2 text-sm leading-relaxed text-muted">
+                        This permanently deletes your Binance connection, portfolio history, spot deals, and profile photo. This action cannot be
+                        undone.
+                      </Dialog.Description>
+                      <form onSubmit={handleAccountDelete} className="mt-5">
+                        <div className="grid gap-4">
+                          <PasswordField
+                            label="Current password"
+                            name="delete-account-password"
+                            value={accountDeletePassword}
+                            onChange={(event) => setAccountDeletePassword(event.target.value)}
+                            autoComplete="current-password"
+                            disabled={accountDeleteLoading}
+                            required
+                          />
+                          <label className="flex flex-col gap-2">
+                            <span className="label">Type DELETE to confirm</span>
+                            <input
+                              className="input px-4 py-3"
+                              name="delete-account-confirmation"
+                              value={accountDeleteConfirmation}
+                              onChange={(event) => setAccountDeleteConfirmation(event.target.value)}
+                              autoComplete="off"
+                              disabled={accountDeleteLoading}
+                              required
+                            />
+                          </label>
+                        </div>
+                        <ErrorMessage message={accountDeleteError} />
+                        <div className="mt-5 flex justify-end gap-2">
+                          <Button type="button" variant="dashboard" disabled={accountDeleteLoading} onClick={() => setAccountDeleteOpen(false)}>
+                            Cancel
+                          </Button>
+                          <Button
+                            type="submit"
+                            variant="filled"
+                            disabled={accountDeleteLoading || accountDeleteConfirmation !== 'DELETE'}
+                            className="border-loss bg-loss hover:border-loss hover:bg-loss-subtle hover:text-loss">
+                            {accountDeleteLoading ? <Spinner /> : <Trash2 className="h-4 w-4" aria-hidden="true" />}
+                            {accountDeleteLoading ? 'Deleting...' : 'Delete permanently'}
+                          </Button>
+                        </div>
+                      </form>
+                    </Dialog.Content>
+                  </Dialog.Portal>
+                </Dialog.Root>
+              </div>
+            </section>
           </section>
         )}
         {activeTab === 'security' && (
-          <section className="ui-surface p-6">
+          <section className="ui-surface p-4 sm:p-6">
             <h2 className="mb-1 text-lg font-semibold">Password</h2>
             <p className="text-sm text-muted">Use a strong, unique password for your account.</p>
             <form onSubmit={handlePasswordSubmit} className="mt-6">
@@ -422,7 +546,7 @@ export function SettingsPage({ userEmail, session, avatarUrl, setAvatarUrl }: Se
           </section>
         )}
         {activeTab === 'exchanges' && (
-          <section className="ui-surface p-6">
+          <section className="ui-surface p-4 sm:p-6">
             <div className="mb-6 flex flex-col items-start justify-between gap-x-10 gap-y-4 sm:flex-row">
               <div>
                 <h2 className="mb-1 text-lg font-semibold">Exchange connections</h2>

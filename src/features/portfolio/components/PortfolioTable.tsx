@@ -131,7 +131,7 @@ export function PortfolioTable({
           </div>
         </div>
       </div>
-      <div className="overflow-x-auto">
+      <div className="@container overflow-x-auto">
         <table className="w-full min-w-225 table-fixed" aria-label={loading ? 'Loading portfolio' : 'Portfolio assets'}>
           <colgroup>
             <col className="w-[19.3%]" />
@@ -159,8 +159,8 @@ export function PortfolioTable({
           ) : assets.length === 0 ? (
             <tbody>
               <tr>
-                <td className="px-3 py-10 text-center text-sm text-muted" colSpan={7}>
-                  Nothing found
+                <td colSpan={7}>
+                  <div className="sticky left-0 w-[100cqw] px-3 py-10 text-center text-sm text-muted">Nothing found</div>
                 </td>
               </tr>
             </tbody>
