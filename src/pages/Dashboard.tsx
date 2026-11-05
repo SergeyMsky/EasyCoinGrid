@@ -123,7 +123,7 @@ export function Dashboard({ currency, userId }: DashboardProps) {
   return (
     <section className="page-container">
       <div>
-        <p className="label mb-2 text-accent">Binance Spot</p>
+        <p className="sign">Binance Spot</p>
         <h1 className="text-3xl font-bold">Portfolio overview</h1>
         <p className="mt-2 text-sm text-muted">Track your portfolio balance, asset allocation, and performance at a glance.</p>
       </div>
@@ -151,6 +151,7 @@ export function Dashboard({ currency, userId }: DashboardProps) {
               loading={portfolioHistory.loading}
               error={portfolioHistory.error}
               enabled={isBinanceConnected === true}
+              demoMode={portfolioHistory.demoMode}
               assets={displayAssets}
               currency={currency}
               currencyRate={currentRate}

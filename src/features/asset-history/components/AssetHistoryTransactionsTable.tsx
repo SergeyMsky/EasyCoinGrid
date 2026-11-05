@@ -194,7 +194,7 @@ export function AssetHistoryTransactionsTable({
           {loading ? (
             <tbody>
               <tr className="border-t border-outline bg-app">
-                <th colSpan={5} scope="rowgroup" className="h-10.25 px-4 py-3">
+                <th colSpan={5} scope="rowgroup" className="h-8.25 px-4 py-2">
                   <div className="flex items-center justify-between gap-4">
                     <Skeleton className="h-3 w-17" />
                     <Skeleton className="h-3 w-21" />
@@ -204,7 +204,7 @@ export function AssetHistoryTransactionsTable({
               {Array.from({ length: 5 }).map((_, index) => (
                 <tr key={index} className="border-t border-outline">
                   {Array.from({ length: 5 }).map((__, cell) => (
-                    <td key={cell} className="h-11.75 px-3 py-2">
+                    <td key={cell} className="h-13.75 p-3">
                       <Skeleton className={`${cell !== 0 ? 'ml-auto' : ''} h-4 w-24`} />
                     </td>
                   ))}
@@ -228,7 +228,7 @@ export function AssetHistoryTransactionsTable({
               {groupTransactionsByDate(transactions).map((group) => (
                 <tbody key={group.key}>
                   <tr className="border-t border-outline bg-app">
-                    <th colSpan={5} scope="rowgroup" className="px-4 py-3">
+                    <th colSpan={5} scope="rowgroup" className="px-4 py-2">
                       <div className="flex items-center justify-between gap-4">
                         <span className="text-xs font-semibold">{group.label}</span>
                         <span className="text-xs font-normal text-muted">
@@ -239,7 +239,7 @@ export function AssetHistoryTransactionsTable({
                   </tr>
                   {group.transactions.map((transaction) => (
                     <tr key={transaction.id} className="h-11.75 border-t border-outline text-sm">
-                      <td className="px-3 py-2">
+                      <td className="p-3">
                         <span className="flex items-center gap-2">
                           <TransactionIcon transaction={transaction} />
                           <span className="truncate" title={getTransactionLabel(transaction)}>
@@ -248,7 +248,7 @@ export function AssetHistoryTransactionsTable({
                         </span>
                       </td>
                       <td
-                        className={`px-3 py-2 text-right font-medium ${
+                        className={`p-3 text-right font-medium ${
                           transaction.direction === 'IN' ? 'text-profit' : transaction.direction === 'OUT' ? 'text-loss' : 'text-text'
                         }`}>
                         <span className="flex items-center justify-end gap-2">
@@ -257,7 +257,7 @@ export function AssetHistoryTransactionsTable({
                           <CoinImage image={null} asset={transaction.asset} resolveMissingImage />
                         </span>
                       </td>
-                      <td className="px-3 py-2 text-right text-muted">
+                      <td className="p-3 text-right text-muted">
                         {Number(transaction.fee_amount) > 0 ? (
                           <span className="flex items-center justify-end gap-2">
                             {formatAmount(transaction.fee_amount, transaction.fee_asset ?? transaction.asset)}
@@ -267,8 +267,8 @@ export function AssetHistoryTransactionsTable({
                           '—'
                         )}
                       </td>
-                      <td className="px-3 py-2 text-right text-muted">{timeFormatter.format(new Date(transaction.occurred_at))}</td>
-                      <td className="px-3 py-2 text-right">
+                      <td className="p-3 text-right text-muted">{timeFormatter.format(new Date(transaction.occurred_at))}</td>
+                      <td className="p-3 text-right">
                         <span className="truncate text-muted" title={transaction.status}>
                           {transaction.status}
                         </span>
@@ -281,7 +281,7 @@ export function AssetHistoryTransactionsTable({
               {loadingMore && (
                 <tbody aria-label="Loading more transactions">
                   <tr className="border-t border-outline bg-app">
-                    <th colSpan={5} scope="rowgroup" className="h-10.25 px-4 py-3">
+                    <th colSpan={5} scope="rowgroup" className="h-10.25 px-4 py-2">
                       <div className="flex items-center justify-between gap-4">
                         <Skeleton className="h-3 w-17" />
                         <Skeleton className="h-3 w-21" />

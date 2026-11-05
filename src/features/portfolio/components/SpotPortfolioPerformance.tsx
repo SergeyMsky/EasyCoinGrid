@@ -12,6 +12,7 @@ type SpotPortfolioPerformanceProps = {
   loading: boolean
   error: string | null
   enabled: boolean
+  demoMode?: boolean
   assets: AssetDisplay[]
   currency: Currency
   currencyRate: number
@@ -60,7 +61,16 @@ function AllocationTooltip({ active, payload, currency }: TooltipContentProps & 
   )
 }
 
-export function SpotPortfolioPerformance({ snapshots, loading, error, enabled, assets, currency, currencyRate }: SpotPortfolioPerformanceProps) {
+export function SpotPortfolioPerformance({
+  snapshots,
+  loading,
+  error,
+  enabled,
+  demoMode = false,
+  assets,
+  currency,
+  currencyRate,
+}: SpotPortfolioPerformanceProps) {
   const [period, setPeriod] = useState<PortfolioHistoryPeriod>('1M')
   const [activeAllocationIndex, setActiveAllocationIndex] = useState(0)
   const points = useMemo(() => getPortfolioHistoryPoints(snapshots, period), [snapshots, period])
@@ -163,7 +173,7 @@ export function SpotPortfolioPerformance({ snapshots, loading, error, enabled, a
                       tick={{ fill: 'var(--color-muted)', fontSize: 11 }}
                       tickLine={false}
                       axisLine={false}
-                      width={64}
+                      width="auto"
                     />
                     <Tooltip
                       content={(props) => <PortfolioHistoryTooltip {...props} currency={currency} />}
@@ -200,11 +210,15 @@ export function SpotPortfolioPerformance({ snapshots, loading, error, enabled, a
             </div>
           ) : (
             <div className="mt-5 flex h-64 items-center justify-center rounded-lg border border-dashed border-outline px-6 text-center text-sm text-muted sm:h-64">
-              {!enabled
-                ? 'Connect a real Binance account to load Spot portfolio history.'
-                : loading
-                  ? 'Loading available Binance account snapshots…'
-                  : 'The chart appears after at least two historical snapshots are available.'}
+              {demoMode
+                ? loading
+                  ? 'Loading demo portfolio history…'
+                  : 'Demo history is unavailable until the portfolio has a value.'
+                : !enabled
+                  ? 'Connect a real Binance account to load Spot portfolio history.'
+                  : loading
+                    ? 'Loading available Binance account snapshots…'
+                    : 'The chart appears after at least two historical snapshots are available.'}
             </div>
           )}
         </div>

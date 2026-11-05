@@ -68,7 +68,7 @@ export function RotationsPage({ currency, userId }: RotationsPageProps) {
   return (
     <main className="page-container">
       <div>
-        <p className="label mb-2 text-accent">Spot</p>
+        <p className="sign">Spot</p>
         <h1 className="text-3xl font-bold">Trade journal</h1>
         <p className="mt-2 text-sm text-muted">
           Track each buy as its own deal, separate from the average price of coins already in your wallet. Add a sale now or record it later.

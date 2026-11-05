@@ -53,24 +53,24 @@ function PortfolioSkeleton() {
     <tbody aria-label="Loading portfolio">
       {Array.from({ length: 5 }).map((_, index) => (
         <tr key={index} className="border-b border-outline last:border-0">
-          <td className="h-16.25 px-3 py-2">
+          <td className="h-16.25 p-3">
             <div className="flex items-center gap-3">
               <Skeleton className="h-7.5 w-7.5 rounded-full" />
               <div className="flex flex-col gap-1">
-                <Skeleton className="h-6 w-25" />
-                <Skeleton className="h-4 w-12" />
+                <Skeleton className="h-5.5 w-25" />
+                <Skeleton className="h-3.5 w-12" />
               </div>
             </div>
           </td>
           {Array.from({ length: 5 }).map((_, cellIndex) => (
-            <td key={cellIndex} className="h-16.25 px-3 py-2">
+            <td key={cellIndex} className="h-16.25 p-3">
               <Skeleton className="ml-auto h-6 w-20" />
             </td>
           ))}
-          <td className="h-16.25 px-3 py-2">
+          <td className="h-16.25 p-3">
             <div className="flex flex-col items-end gap-1">
-              <Skeleton className="h-6 w-20" />
-              <Skeleton className="h-4 w-10" />
+              <Skeleton className="h-5.5 w-20" />
+              <Skeleton className="h-3.5 w-10" />
             </div>
           </td>
         </tr>
@@ -169,7 +169,7 @@ export function PortfolioTable({
               {pageAssets.map((asset) => {
                 return (
                   <tr key={asset.asset}>
-                    <td className="h-16.25 px-3 py-2 text-left">
+                    <td className="h-16.25 p-3 text-left">
                       <div className="flex items-center gap-3">
                         <CoinImage image={asset.image} asset={asset.asset} />
                         <div className="flex flex-col">
@@ -178,8 +178,8 @@ export function PortfolioTable({
                         </div>
                       </div>
                     </td>
-                    <td className="h-16.25 px-3 py-2 text-right">{formatPrice(asset.amount)}</td>
-                    <td className="h-16.25 px-3 py-2 text-right">
+                    <td className="h-16.25 p-3 text-right">{formatPrice(asset.amount)}</td>
+                    <td className="h-16.25 p-3 text-right">
                       <div className="flex justify-end">
                         <span
                           className={`flex items-center gap-1 rounded-md px-2 py-1 text-xs ${asset.change24hPercent >= 0 ? 'bg-profit-subtle text-profit' : 'bg-loss-subtle text-loss'}`}>
@@ -192,13 +192,13 @@ export function PortfolioTable({
                         </span>
                       </div>
                     </td>
-                    <td className="h-16.25 px-3 py-2 text-right">{formatCurrency(asset.convertedTotal, currency)}</td>
-                    <td className="h-16.25 px-3 py-2 text-right">{formatUnitPrice(asset.convertedPrice, currency)}</td>
-                    <td className="h-16.25 px-3 py-2 text-right">
+                    <td className="h-16.25 p-3 text-right">{formatCurrency(asset.convertedTotal, currency)}</td>
+                    <td className="h-16.25 p-3 text-right">{formatUnitPrice(asset.convertedPrice, currency)}</td>
+                    <td className="h-16.25 p-3 text-right">
                       {asset.convertedAvgBuy === null ? '—' : formatUnitPrice(asset.convertedAvgBuy, currency)}
                     </td>
                     <td
-                      className={`h-16.25 px-3 py-2 text-right ${asset.convertedPnl === null ? '' : asset.convertedPnl >= 0 ? 'text-profit' : 'text-loss'}`}>
+                      className={`h-16.25 p-3 text-right ${asset.convertedPnl === null ? '' : asset.convertedPnl >= 0 ? 'text-profit' : 'text-loss'}`}>
                       {asset.convertedPnl === null ? (
                         '—'
                       ) : (

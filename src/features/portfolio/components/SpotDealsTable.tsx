@@ -15,6 +15,7 @@ import { SortIndicator } from '@/shared/components/SortIndicator'
 import { SearchInput } from '@/shared/components/SearchInput'
 import { TablePagination } from '@/shared/components/TablePagination'
 import { TABLE_PAGE_SIZE, useTablePagination } from '@/shared/hooks/useTablePagination'
+import { Skeleton } from '@/shared/components/Skeleton'
 
 type SpotDealSortKey = 'name' | 'amount' | 'invested' | 'entry' | 'market' | 'pnl'
 type SpotDealSort = { sortBy: SpotDealSortKey; sortDirection: 'asc' | 'desc' }
@@ -98,6 +99,57 @@ function DealName({ symbol }: { symbol: string }) {
         <p className="truncate text-xs text-muted">{quote ? `${base}/${quote}` : symbol}</p>
       </div>
     </div>
+  )
+}
+
+function SpotDealsSkeleton() {
+  return (
+    <tbody aria-label="Loading spot deals">
+      {Array.from({ length: 4 }, (_, index) => (
+        <tr key={index} className="border-t border-outline">
+          <td className="h-16 p-3">
+            <div className="flex items-center gap-2.5">
+              <Skeleton className="h-7.5 w-7.5 shrink-0 rounded-full" />
+              <div className="min-w-0 flex-1 space-y-1">
+                <Skeleton className="h-6 w-12" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+            </div>
+            <Skeleton className="mt-1 h-5.5 w-15.5 rounded-md" />
+          </td>
+          <td className="h-16 p-3">
+            <Skeleton className="ml-auto h-6 w-14" />
+          </td>
+          <td className="h-16 p-3">
+            <Skeleton className="ml-auto h-5.5 w-20" />
+          </td>
+          <td className="h-16 p-3">
+            <div className="flex flex-col items-end gap-1">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-5.5 w-16" />
+            </div>
+          </td>
+          <td className="h-16 p-3">
+            <div className="flex flex-col items-end gap-1">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-4 w-25" />
+              <Skeleton className="h-6 w-20" />
+              <Skeleton className="h-4 w-15" />
+            </div>
+          </td>
+          <td className="h-16 p-3">
+            <div className="flex flex-col items-end gap-1">
+              <Skeleton className="h-4 w-15" />
+              <Skeleton className="h-6 w-22" />
+              <Skeleton className="h-4 w-12" />
+            </div>
+          </td>
+          <td className="h-16 p-3">
+            <Skeleton className="ml-auto h-8.5 w-8.5 rounded-md" />
+          </td>
+        </tr>
+      ))}
+    </tbody>
   )
 }
 
@@ -279,189 +331,181 @@ export function SpotDealsTable({
               ))}
             </tr>
           </thead>
-          <tbody>
-            {loading ? (
-              Array.from({ length: 4 }, (_, index) => (
-                <tr key={index} aria-hidden="true" className="border-t border-outline">
-                  {columns.map((column, columnIndex) => (
-                    <td key={`${column.label}-${columnIndex}`} className="h-16 px-3 py-2">
-                      <span
-                        className={`block h-4 animate-pulse rounded bg-surface-raised motion-reduce:animate-none ${columnIndex === 0 ? 'w-24' : 'ml-auto w-16'}`}
-                      />
-                    </td>
-                  ))}
+          {loading ? (
+            <SpotDealsSkeleton />
+          ) : (
+            <tbody>
+              {rotations.length === 0 ? (
+                <tr>
+                  <td className="px-3 py-12 text-center" colSpan={columns.length}>
+                    <p className="text-sm font-medium">Your spot journal is empty</p>
+                    <p className="mt-1 text-sm text-muted">Add a buy to track a deal separately from your long-term holdings.</p>
+                    <Button type="button" variant="dashboard" onClick={onAdd} className="mt-4 gap-1">
+                      <Plus className="h-4 w-4" aria-hidden="true" />
+                      Add your first deal
+                    </Button>
+                  </td>
                 </tr>
-              ))
-            ) : rotations.length === 0 ? (
-              <tr>
-                <td className="px-3 py-12 text-center" colSpan={columns.length}>
-                  <p className="text-sm font-medium">Your spot journal is empty</p>
-                  <p className="mt-1 text-sm text-muted">Add a buy to track a deal separately from your long-term holdings.</p>
-                  <Button type="button" variant="dashboard" onClick={onAdd} className="mt-4 gap-1">
-                    <Plus className="h-4 w-4" aria-hidden="true" />
-                    Add your first deal
-                  </Button>
-                </td>
-              </tr>
-            ) : sortedRotations.length === 0 ? (
-              <tr>
-                <td className="px-3 py-10 text-center text-sm text-muted" colSpan={columns.length}>
-                  Nothing found
-                </td>
-              </tr>
-            ) : (
-              pageRotations.map((rotation) => {
-                const isOpen = rotation.status === 'OPEN'
-                const currentPrice = isOpen && rotation.coingecko_id ? pricesByCoinId[rotation.coingecko_id] : undefined
-                const remainingQty = Math.max(0, rotation.buy_qty - rotation.sold_qty)
-                const unrealizedPnlUsd = currentPrice ? (currentPrice.price - rotation.buy_price) * remainingQty - rotation.fee_amount : null
-                const unrealizedPnlPercent =
-                  unrealizedPnlUsd !== null && remainingQty > 0 && rotation.buy_price > 0
-                    ? (unrealizedPnlUsd / (rotation.buy_price * remainingQty)) * 100
-                    : null
-                const pnl = isOpen ? unrealizedPnlUsd : rotation.realized_pnl_usd
-                const pnlPercent = isOpen ? unrealizedPnlPercent : rotation.realized_pnl_percent
-                const resultClass = pnl === null ? 'text-muted' : pnl >= 0 ? 'text-profit' : 'text-loss'
+              ) : sortedRotations.length === 0 ? (
+                <tr>
+                  <td className="px-3 py-10 text-center text-sm text-muted" colSpan={columns.length}>
+                    Nothing found
+                  </td>
+                </tr>
+              ) : (
+                pageRotations.map((rotation) => {
+                  const isOpen = rotation.status === 'OPEN'
+                  const currentPrice = isOpen && rotation.coingecko_id ? pricesByCoinId[rotation.coingecko_id] : undefined
+                  const remainingQty = Math.max(0, rotation.buy_qty - rotation.sold_qty)
+                  const unrealizedPnlUsd = currentPrice ? (currentPrice.price - rotation.buy_price) * remainingQty - rotation.fee_amount : null
+                  const unrealizedPnlPercent =
+                    unrealizedPnlUsd !== null && remainingQty > 0 && rotation.buy_price > 0
+                      ? (unrealizedPnlUsd / (rotation.buy_price * remainingQty)) * 100
+                      : null
+                  const pnl = isOpen ? unrealizedPnlUsd : rotation.realized_pnl_usd
+                  const pnlPercent = isOpen ? unrealizedPnlPercent : rotation.realized_pnl_percent
+                  const resultClass = pnl === null ? 'text-muted' : pnl >= 0 ? 'text-profit' : 'text-loss'
 
-                return (
-                  <tr key={rotation.id} className="border-t border-outline">
-                    <td className="px-3 py-2">
-                      <DealName symbol={rotation.symbol} />
-                      <span
-                        className={`mt-1 inline-flex items-center gap-1 rounded-md border border-outline bg-surface-raised px-1.5 py-0.5 text-xs font-medium text-muted`}>
-                        {isOpen ? <StatusDot /> : <LockKeyhole className="h-3 w-3" aria-hidden="true" />}
-                        {isOpen ? 'Open' : 'Closed'}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2 text-right tabular-nums">{formatNumber(rotation.buy_qty)}</td>
-                    <td className="px-3 py-2 text-right tabular-nums">
-                      {rotation.invested_amount === null ? '—' : formatCurrency(rotation.invested_amount * currencyRate, currency)}
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <p className="text-xs text-muted">{formatExecutionDate(rotation.buy_time)}</p>
-                      <p className="mt-1">{formatUnitPrice(rotation.buy_price * currencyRate, currency)}</p>
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      {isOpen ? (
-                        currentPrice ? (
-                          <div>
-                            <p className="flex items-center justify-end gap-1 text-xs text-muted">
-                              <StatusDot />
-                              Market price
-                            </p>
-                            <p className="mt-1 text-xs text-muted">{formatExecutionDate(currentPrice.timestamp)}</p>
-                            <p className="mt-1 font-medium tabular-nums">{formatUnitPrice(currentPrice.price * currencyRate, currency)}</p>
-                            {currentPrice.change24hPercent !== undefined && (
-                              <p
-                                className={`mt-1 text-xs font-medium tabular-nums ${
-                                  currentPrice.change24hPercent === null
-                                    ? 'text-muted'
-                                    : currentPrice.change24hPercent > 0
-                                      ? 'text-profit'
-                                      : currentPrice.change24hPercent < 0
-                                        ? 'text-loss'
-                                        : 'text-muted'
-                                }`}>
-                                24h {currentPrice.change24hPercent === null ? '—' : formatSignedValue(currentPrice.change24hPercent, '', '%')}
+                  return (
+                    <tr key={rotation.id} className="border-t border-outline">
+                      <td className="p-3">
+                        <DealName symbol={rotation.symbol} />
+                        <span
+                          className={`mt-1 inline-flex items-center gap-1 rounded-md border border-outline bg-surface-raised px-1.5 py-0.5 text-xs font-medium text-muted`}>
+                          {isOpen ? <StatusDot /> : <LockKeyhole className="h-3 w-3" aria-hidden="true" />}
+                          {isOpen ? 'Open' : 'Closed'}
+                        </span>
+                      </td>
+                      <td className="p-3 text-right tabular-nums">{formatNumber(rotation.buy_qty)}</td>
+                      <td className="p-3 text-right tabular-nums">
+                        {rotation.invested_amount === null ? '—' : formatCurrency(rotation.invested_amount * currencyRate, currency)}
+                      </td>
+                      <td className="p-3 text-right">
+                        <p className="text-xs text-muted">{formatExecutionDate(rotation.buy_time)}</p>
+                        <p className="mt-1">{formatUnitPrice(rotation.buy_price * currencyRate, currency)}</p>
+                      </td>
+                      <td className="p-3 text-right">
+                        {isOpen ? (
+                          currentPrice ? (
+                            <div>
+                              <p className="flex items-center justify-end gap-1 text-xs text-muted">
+                                <StatusDot />
+                                Market price
                               </p>
-                            )}
-                          </div>
+                              <p className="mt-1 text-xs text-muted">{formatExecutionDate(currentPrice.timestamp)}</p>
+                              <p className="mt-1 font-medium tabular-nums">{formatUnitPrice(currentPrice.price * currencyRate, currency)}</p>
+                              {currentPrice.change24hPercent !== undefined && (
+                                <p
+                                  className={`mt-1 text-xs font-medium tabular-nums ${
+                                    currentPrice.change24hPercent === null
+                                      ? 'text-muted'
+                                      : currentPrice.change24hPercent > 0
+                                        ? 'text-profit'
+                                        : currentPrice.change24hPercent < 0
+                                          ? 'text-loss'
+                                          : 'text-muted'
+                                  }`}>
+                                  24h {currentPrice.change24hPercent === null ? '—' : formatSignedValue(currentPrice.change24hPercent, '', '%')}
+                                </p>
+                              )}
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="flex items-center justify-end gap-1 text-xs text-muted">
+                                <StatusDot />
+                                Market price
+                              </p>
+                              <p className="mt-1 font-medium tabular-nums">—</p>
+                              <p className="mt-1 text-xs text-muted">{rotation.coingecko_id ? 'Price unavailable' : 'Select a coin for estimates'}</p>
+                            </div>
+                          )
                         ) : (
                           <div>
-                            <p className="flex items-center justify-end gap-1 text-xs text-muted">
-                              <StatusDot />
-                              Market price
+                            <p className="text-xs text-muted">Exit price</p>
+                            <p className="mt-1 text-xs text-muted">{formatExecutionDate(rotation.sell_time)}</p>
+                            <p className="mt-1 font-medium tabular-nums">
+                              {rotation.sell_price === null ? '—' : formatUnitPrice(rotation.sell_price * currencyRate, currency)}
                             </p>
-                            <p className="mt-1 font-medium tabular-nums">—</p>
-                            <p className="mt-1 text-xs text-muted">{rotation.coingecko_id ? 'Price unavailable' : 'Select a coin for estimates'}</p>
                           </div>
-                        )
-                      ) : (
-                        <div>
-                          <p className="text-xs text-muted">Exit price</p>
-                          <p className="mt-1 text-xs text-muted">{formatExecutionDate(rotation.sell_time)}</p>
-                          <p className="mt-1 font-medium tabular-nums">
-                            {rotation.sell_price === null ? '—' : formatUnitPrice(rotation.sell_price * currencyRate, currency)}
-                          </p>
+                        )}
+                      </td>
+                      <td className="p-3">
+                        <div className="flex flex-col items-end gap-1">
+                          <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-muted">
+                            {isOpen ? <StatusDot /> : <LockKeyhole className="h-3 w-3" aria-hidden="true" />}
+                            {isOpen ? 'Floating' : 'Realized'}
+                          </span>
+                          <div className={`text-right font-medium tabular-nums ${resultClass}`}>
+                            <p>{pnl === null ? '—' : formatSignedCurrency(pnl * currencyRate, currency)}</p>
+                            <p className="text-xs">{pnlPercent === null ? '—' : formatSignedValue(pnlPercent, '', '%')}</p>
+                          </div>
                         </div>
-                      )}
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="flex flex-col items-end gap-1">
-                        <span className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-muted">
-                          {isOpen ? <StatusDot /> : <LockKeyhole className="h-3 w-3" aria-hidden="true" />}
-                          {isOpen ? 'Floating' : 'Realized'}
-                        </span>
-                        <div className={`text-right font-medium tabular-nums ${resultClass}`}>
-                          <p>{pnl === null ? '—' : formatSignedCurrency(pnl * currencyRate, currency)}</p>
-                          <p className="text-xs">{pnlPercent === null ? '—' : formatSignedValue(pnlPercent, '', '%')}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-3 py-2 text-right">
-                      <div className="flex justify-end">
-                        <Popover.Root open={openActionsId === rotation.id} onOpenChange={(open) => setOpenActionsId(open ? rotation.id : null)}>
-                          <Popover.Trigger asChild>
-                            <Button
-                              type="button"
-                              variant="dashboard"
-                              size="sm"
-                              aria-label={`Actions for ${rotation.symbol} deal`}
-                              aria-haspopup="dialog">
-                              <EllipsisVertical className="h-4 w-4" aria-hidden="true" />
-                            </Button>
-                          </Popover.Trigger>
-                          <Popover.Portal>
-                            <Popover.Content
-                              align="end"
-                              sideOffset={4}
-                              aria-label={`Actions for ${rotation.symbol} deal`}
-                              className="ui-surface z-50 min-w-40 overflow-hidden p-1.5">
-                              <div className="space-y-1">
-                                {isOpen && (
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="flex justify-end">
+                          <Popover.Root open={openActionsId === rotation.id} onOpenChange={(open) => setOpenActionsId(open ? rotation.id : null)}>
+                            <Popover.Trigger asChild>
+                              <Button
+                                type="button"
+                                variant="dashboard"
+                                size="sm"
+                                aria-label={`Actions for ${rotation.symbol} deal`}
+                                aria-haspopup="dialog">
+                                <EllipsisVertical className="h-4 w-4" aria-hidden="true" />
+                              </Button>
+                            </Popover.Trigger>
+                            <Popover.Portal>
+                              <Popover.Content
+                                align="end"
+                                sideOffset={4}
+                                aria-label={`Actions for ${rotation.symbol} deal`}
+                                className="ui-surface z-50 min-w-40 overflow-hidden p-1.5">
+                                <div className="space-y-1">
+                                  {isOpen && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setOpenActionsId(null)
+                                        onRecordSale(rotation)
+                                      }}
+                                      className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm text-text transition hover:bg-surface-raised">
+                                      <ArrowDownToLine className="h-4 w-4" aria-hidden="true" />
+                                      Record sale
+                                    </button>
+                                  )}
                                   <button
                                     type="button"
                                     onClick={() => {
                                       setOpenActionsId(null)
-                                      onRecordSale(rotation)
+                                      onEdit(rotation)
                                     }}
                                     className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm text-text transition hover:bg-surface-raised">
-                                    <ArrowDownToLine className="h-4 w-4" aria-hidden="true" />
-                                    Record sale
+                                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                                    Edit
                                   </button>
-                                )}
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setOpenActionsId(null)
-                                    onEdit(rotation)
-                                  }}
-                                  className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm text-text transition hover:bg-surface-raised">
-                                  <Pencil className="h-4 w-4" aria-hidden="true" />
-                                  Edit
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setOpenActionsId(null)
-                                    setDeleteError(null)
-                                    setSelectedForDeletion(rotation)
-                                  }}
-                                  className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm text-loss transition hover:bg-loss-subtle">
-                                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                                  Delete
-                                </button>
-                              </div>
-                            </Popover.Content>
-                          </Popover.Portal>
-                        </Popover.Root>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })
-            )}
-          </tbody>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setOpenActionsId(null)
+                                      setDeleteError(null)
+                                      setSelectedForDeletion(rotation)
+                                    }}
+                                    className="flex w-full cursor-pointer items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm text-loss transition hover:bg-loss-subtle">
+                                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                                    Delete
+                                  </button>
+                                </div>
+                              </Popover.Content>
+                            </Popover.Portal>
+                          </Popover.Root>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          )}
         </table>
       </div>
       <TablePagination currentPage={currentPage} pageSize={TABLE_PAGE_SIZE} totalItems={sortedRotations.length} onPageChange={onPageChange} />

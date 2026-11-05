@@ -19,7 +19,7 @@ export function AssetHistorySyncPanel({ connected, loading, syncing, syncResult,
     <>
       <div className="flex flex-wrap items-end justify-between gap-5">
         <div>
-          <p className="label mb-2 text-accent">Binance account</p>
+          <p className="sign">Binance account</p>
           <h1 className="text-3xl font-bold">Asset history</h1>
           <p className="mt-2 text-sm text-muted">
             Review Spot trades, deposits, withdrawals, wallet transfers, Simple Earn activity and Convert trades.

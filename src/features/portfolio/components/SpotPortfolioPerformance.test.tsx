@@ -64,6 +64,31 @@ describe('SpotPortfolioPerformance', () => {
     expect(screen.getByText('Connect a real Binance account to load Spot portfolio history.')).toBeInTheDocument()
   })
 
+  it('labels mock portfolio history as demo data', () => {
+    const now = Date.now()
+    const snapshots: SpotPortfolioSnapshot[] = [
+      { id: 'one', snapshot_at: new Date(now - 60_000).toISOString(), total_value_usd: 1000, source: 'APP_OBSERVED' },
+      { id: 'two', snapshot_at: new Date(now).toISOString(), total_value_usd: 1050, source: 'APP_OBSERVED' },
+    ]
+
+    render(
+      <SpotPortfolioPerformance
+        snapshots={snapshots}
+        loading={false}
+        error={null}
+        enabled={false}
+        demoMode
+        assets={[asset('USDT', 1050)]}
+        currency="USD"
+        currencyRate={1}
+      />,
+    )
+
+    expect(screen.getByText('Demo data')).toBeInTheDocument()
+    expect(screen.getByText(/Illustrative history, not live account data/)).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /Spot portfolio value history, 2 data points/ })).toBeInTheDocument()
+  })
+
   it('converts the chart value and selected-period change to the selected currency', () => {
     const now = Date.now()
     const snapshots: SpotPortfolioSnapshot[] = [
@@ -83,7 +108,7 @@ describe('SpotPortfolioPerformance', () => {
       />,
     )
 
-    expect(screen.getByText('Spot portfolio value').nextElementSibling).toHaveTextContent(/€1,012\.00/)
+    expect(screen.getByText('Spot portfolio value').parentElement?.nextElementSibling).toHaveTextContent(/€1,012\.00/)
     expect(screen.getByText('value change for selected period').parentElement).toHaveTextContent(/\+€92\.00/)
     expect(screen.getByRole('img', { name: /Spot portfolio value history, 2 data points/ })).toBeInTheDocument()
   })
